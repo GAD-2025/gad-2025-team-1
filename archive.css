@@ -1,0 +1,249 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+}
+
+.starfield-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 50px 50px, #fff, rgba(0,0,0,0));
+    background-size: 200px 200px;
+    animation: twinkle 5s infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Header */
+.main-header {
+    position: relative;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.7);
+    border-bottom: 1px solid rgba(255, 107, 0, 0.3);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.header-menu {
+    display: flex;
+    gap: 30px;
+}
+
+.menu-item {
+    color: #aaa;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+    border-bottom: 2px solid transparent;
+}
+
+.menu-item:hover,
+.menu-item.active {
+    color: #fff;
+    border-bottom-color: #FF6B00;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-name {
+    font-size: 14px;
+    color: #ccc;
+}
+
+.user-badge {
+    background: #FF6B00;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #fff;
+}
+
+/* Archive Container */
+.archive-container {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.archive-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.archive-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+    font-weight: 300;
+}
+
+.archive-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 30px;
+}
+
+.count-number {
+    font-size: 48px;
+    color: #FF6B00;
+    font-weight: bold;
+}
+
+.count-label {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.search-bar input {
+    width: 400px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.3);
+    border-radius: 25px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.search-bar input::placeholder {
+    color: #888;
+}
+
+.search-btn {
+    padding: 12px 30px;
+    background: #FF6B00;
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.search-btn:hover {
+    background: #e85a00;
+}
+
+/* Filter Bar */
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+    padding-bottom: 15px;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 12px;
+    transition: color 0.3s;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    color: #FF6B00;
+}
+
+/* Artwork Grid */
+.artwork-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 25px;
+}
+
+.artwork-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 107, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+
+.artwork-item:hover {
+    border-color: rgba(255, 107, 0, 0.6);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(255, 107, 0, 0.2);
+}
+
+.item-thumbnail {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.item-info {
+    padding: 15px;
+    font-size: 12px;
+}
+
+.item-title {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.item-artist {
+    color: #FF6B00;
+    margin-bottom: 5px;
+}
+
+.item-date {
+    color: #aaa;
+    margin-bottom: 3px;
+}
+
+.item-purchase {
+    color: #aaa;
+    margin-bottom: 8px;
+}
+
+.item-badge {
+    display: inline-block;
+    background: rgba(255, 107, 0, 0.3);
+    color: #FF6B00;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
