@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>거래하기 - AI 아트 마켓플레이스</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font: Inter (Arial로 대체) -->
+    <link rel="stylesheet" href="/frontend/style/marketplace.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS Variables */
+        :root {
+            --color-bg-dark: #0a0a0a;
+            --color-accent-orange: #ff5722;
+        }
+        
+        /* [START: 공유 바디 스타일 가이드 적용] */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            margin: 0;
+            padding: 0;
+            color: #ccc;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 안정적인 우주 이미지 URL을 배경으로 사용 */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg'); 
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            opacity: 0.4;
+            z-index: -1;
+        }
+        /* [END: 공유 바디 스타일 가이드 적용] */
+
+        /* 공유 스타일 */
+        .cta-button {
+            background-color: var(--color-accent-orange);
+            transition: all 0.2s;
+        }
+        .cta-button:hover {
+            background-color: #e64a19;
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+        }
+
+        /* Logo Placeholder Style */
+        .logo-placeholder {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+        }
+        .logo-placeholder .ai {
+            color: var(--color-accent-orange);
+        }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 3rem;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            color: #333;
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        /* 이미지 플레이스홀더를 배경색과 잘 어울리도록 수정 */
+        .aspect-square img {
+            opacity: 0.7; /* 썸네일 불투명도 낮춤 */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Artwork Detail Modal (재사용: 작품 상세 페이지 시뮬레이션) -->
+    <div id="artworkDetailModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-4">작품 상세 페이지 (거래하기 - 프로토타입)</h2>
+            <p class="text-lg mb-6">여기는 '거래하기' 페이지에서 작품 클릭 시 이동하는 상세 페이지입니다.</p>
+            <div class="bg-gray-100 p-6 rounded-lg mb-6">
+                <p>작품 정보 및 구매/판매 관련 상세 UI가 위치합니다.</p>
+            </div>
+            <button onclick="closeModal()" class="px-6 py-3 cta-button text-white font-bold rounded-lg shadow-md hover:bg-red-700">
+                닫기
+            </button>
+        </div>
+    </div>
+    
+    <!-- Content Wrapper -->
+    <div class="min-h-screen">
+
+        <header class="main-header">
+    <div class="header-section header-left">
+        <a href="/frontend/pages/explore.html" class="header-logo">
+            <span style="color: #FF5900;">creAItive</span>
+        </a>
+    </div>
+
+    <nav class="header-section header-center">
+        <ul class="header-menu">
+            <li><a href="/frontend/pages/marketplace.html" class="active">거래하기</a></li>
+            <li><a href="/frontend/pages/archive.html" >작품보관함</a></li>
+            <li><a href="/frontend/pages/myspace.html" >마이 스페이스</a></li>
+            <li><a href="/frontend/pages/setting.html">설정</a></li>
+        </ul>
+    </nav>
+
+    <div class="header-section header-right">
+        <div class="user-profile-widget">
+            <img src="/frontend/images/White Cats.jpg" alt="프로필" class="widget-profile-img">
+            
+            <div class="widget-info">
+                <span class="widget-user-name">김민지</span>
+                
+                <span class="widget-badge-buyer">구매자</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+            <!-- 2. 카테고리 검색 섹션 -->
+            <section class="mb-10 text-center">
+                <h1 class="text-3xl font-bold text-white mb-4">카테고리 검색</h1>
+                
+                <!-- 간결하고 작은 검색바 -->
+                <div class="flex max-w-xl mx-auto p-1 bg-gray-800 rounded-full shadow-lg">
+                    <input type="text" placeholder="작품명, 작가, 태그 검색..." id="tradeSearchInput"
+                           class="flex-grow bg-transparent p-2 text-white text-sm focus:outline-none placeholder-gray-400 rounded-l-full">
+                    <button onclick="handleSearchTrade()" class="cta-button text-white px-4 py-2 text-sm font-semibold rounded-full hover:opacity-90 transition duration-200">
+                        검색
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. 필터링 및 페이지네이션 컨트롤 -->
+            <section class="mb-6 flex justify-between items-center flex-wrap gap-4">
+                <!-- 필터/정렬 드롭다운 -->
+                <div class="flex space-x-3 items-center">
+                    <span class="text-sm text-gray-400">정렬:</span>
+                    <select id="sortCriteria" class="bg-gray-700 text-white text-sm p-2 rounded-lg border border-gray-600 focus:outline-none">
+                        <option value="recent">최신순</option>
+                        <option value="popular">인기순</option>
+                        <option value="low_price">낮은 가격순</option>
+                        <option value="high_price">높은 가격순</option>
+                    </select>
+                </div>
+
+                <!-- 페이지네이션 정보 및 컨트롤 (현재는 UI만 구현) -->
+                <div id="paginationControls" class="flex items-center space-x-2 text-sm text-gray-400">
+                    <span id="pageInfo">1 / 5 페이지</span>
+                    <button id="prevPage" class="bg-gray-700 hover:bg-gray-600 p-1 rounded-full w-8 h-8 flex items-center justify-center">
+                        <!-- Left Arrow SVG Icon -->
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button id="nextPage" class="bg-gray-700 hover:bg-gray-600 p-1 rounded-full w-8 h-8 flex items-center justify-center">
+                        <!-- Right Arrow SVG Icon -->
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4. 작품 그리드 (4열 레이아웃) - JS를 통해 동적 생성됨 -->
+            <section>
+                <!-- 작품 카드가 동적으로 삽입될 위치 -->
+                <div id="artworkGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Dynamic content will be inserted here by JavaScript -->
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900/90 border-t border-gray-800 mt-12 py-8">
+            <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+                &copy; 2025 creAI-tive Art Marketplace Prototype. All rights reserved.
+            </div>
+        </footer>
+
+    </div>
+    
+    <script>
+        // 작품 상세 페이지 모달을 띄우는 함수 (재사용)
+        function openModal(artworkName) {
+            const modal = document.getElementById('artworkDetailModal');
+            const modalTitle = modal.querySelector('h2');
+            
+            if (artworkName) {
+                 modalTitle.textContent = `${artworkName} 작품 상세 페이지 (프로토타입)`;
+            } else {
+                modalTitle.textContent = '작품 상세 페이지 (프로토타입)';
+            }
+            
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 작품 상세 페이지 모달을 닫는 함수 (재사용)
+        function closeModal() {
+            document.getElementById('artworkDetailModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('artworkDetailModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target.id === 'artworkDetailModal') {
+                        closeModal();
+                    }
+                });
+            }
+        });
+
+        // =========================================================
+        // 작품 데이터 및 동적 로딩 로직
+        // =========================================================
+
+        const artworkData = [
+            { id: 1, title: "환상의 숲", artist: "이작가", color: "38761d", category: "풍경화", price: 300, popular: 850 },
+            { id: 2, title: "도시의 그림자", artist: "김작가", color: "674ea7", category: "컨셉아트", price: 550, popular: 720 },
+            { id: 3, title: "미래 도시 건축", artist: "박작가", color: "1c4587", category: "SF", price: 720, popular: 910 },
+            { id: 4, title: "사이버펑크 네온", artist: "최작가", color: "783f04", category: "사이버펑크", price: 450, popular: 600 },
+            { id: 5, title: "고대 유적의 빛", artist: "정작가", color: "cc0000", category: "추상", price: 680, popular: 880 },
+            { id: 6, title: "초현실주의 꽃", artist: "윤작가", color: "38761d", category: "일러스트", price: 320, popular: 450 },
+            { id: 7, title: "미니멀 풍경", artist: "오작가", color: "674ea7", category: "미니멀", price: 500, popular: 650 },
+            { id: 8, title: "추상 회화 '01'", artist: "강작가", color: "1c4587", category: "추상", price: 780, popular: 950 },
+            { id: 9, title: "우주 여행자의 꿈", artist: "한작가", color: "783f04", category: "SF", price: 890, popular: 1020 },
+            { id: 10, title: "고양이 로봇", artist: "배작가", color: "cc0000", category: "일러스트", price: 620, popular: 780 },
+            { id: 11, title: "숲 속의 정령", artist: "서작가", color: "38761d", category: "몽환", price: 490, popular: 610 },
+            { id: 12, title: "추상적 인물", artist: "유작가", color: "674ea7", category: "추상", price: 410, popular: 530 },
+            { id: 13, title: "황금 사막의 노을", artist: "진작가", color: "783f04", category: "풍경화", price: 580, popular: 770 },
+            { id: 14, title: "차가운 빛", artist: "임작가", color: "1c4587", category: "미니멀", price: 650, popular: 810 },
+            { id: 15, title: "AI의 초상", artist: "홍작가", color: "cc0000", category: "컨셉아트", price: 920, popular: 1100 },
+        ];
+
+        const artworksPerPage = 12; // 페이지당 작품 수
+        let currentPage = 1;
+        let sortedData = artworkData;
+
+        // 작품 카드를 생성하는 함수
+        function createArtworkCard(artwork) {
+            const artistName = artwork.artist;
+            const artworkTitle = artwork.title;
+            const cardHtml = `
+                <div class="rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition duration-300" onclick="openModal('${artworkTitle} - ${artistName}')">
+                    <!-- 썸네일 (Placeholder 이미지 대체) -->
+                    <div class="aspect-square relative flex items-center justify-center bg-gray-600/50">
+                        <img src="https://placehold.co/400x400/${artwork.color}/ffffff?text=Art+${artwork.id}" alt="${artworkTitle} 썸네일" class="w-full h-full object-cover opacity-70">
+                        <span class="absolute text-2xl font-bold text-white">Art ${artwork.id}</span>
+                    </div>
+                    <!-- 작품 상세 설명 칸 -->
+                    <div class="artwork-card-content p-3 bg-gray-700 rounded-b-xl">
+                        <h4 class="text-base font-bold truncate">${artworkTitle}</h4>
+                        <p class="text-xs text-gray-400">${artistName}</p>
+                    </div>
+                </div>
+            `;
+            return cardHtml;
+        }
+
+        // 작품 그리드를 렌더링하는 함수
+        function renderArtworkGrid(data, page) {
+            const gridContainer = document.getElementById('artworkGrid');
+            if (!gridContainer) return;
+
+            // 페이지네이션 로직 적용
+            const startIndex = (page - 1) * artworksPerPage;
+            const endIndex = startIndex + artworksPerPage;
+            const currentArtworks = data.slice(startIndex, endIndex);
+
+            // HTML 생성
+            gridContainer.innerHTML = currentArtworks.map(createArtworkCard).join('');
+
+            // 페이지네이션 UI 업데이트
+            updatePaginationControls(data.length, page);
+        }
+        
+        // 페이지네이션 컨트롤 UI 업데이트 함수
+        function updatePaginationControls(totalArtworks, currentPage) {
+            const totalPages = Math.ceil(totalArtworks / artworksPerPage);
+            const pageInfoElement = document.getElementById('pageInfo');
+            const prevButton = document.getElementById('prevPage');
+            const nextButton = document.getElementById('nextPage');
+
+            if (pageInfoElement) {
+                pageInfoElement.textContent = `${currentPage} / ${totalPages} 페이지`;
+            }
+
+            if (prevButton) {
+                prevButton.disabled = (currentPage === 1);
+                prevButton.classList.toggle('opacity-50', currentPage === 1);
+            }
+            if (nextButton) {
+                nextButton.disabled = (currentPage === totalPages);
+                nextButton.classList.toggle('opacity-50', currentPage === totalPages);
+            }
+        }
+        
+        // 검색 버튼 클릭 시 동작 (현재는 시뮬레이션)
+        function handleSearchTrade() {
+             const searchInput = document.getElementById('tradeSearchInput');
+             openModal(`'${searchInput.value.trim()}'에 대한 거래 작품 검색 결과`);
+             searchInput.value = '';
+        }
+
+        // 초기 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            renderArtworkGrid(sortedData, currentPage); // 초기 작품 목록 렌더링
+            
+            // 페이지네이션 이벤트 리스너 (향후 실제 데이터 필터링/정렬 기능과 연동 가능)
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderArtworkGrid(sortedData, currentPage);
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(sortedData.length / artworksPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderArtworkGrid(sortedData, currentPage);
+                }
+            });
+            
+            // 정렬 드롭다운 변경 이벤트 리스너 (향후 정렬 로직 구현)
+             document.getElementById('sortCriteria').addEventListener('change', (e) => {
+                 const criteria = e.target.value;
+                 // **TODO: 여기에 실제 정렬 로직을 추가하여 sortedData를 업데이트해야 합니다.**
+                 console.log(`작품을 ${criteria} 기준으로 정렬합니다.`);
+                 currentPage = 1; // 정렬 시 1페이지로 리셋
+                 renderArtworkGrid(sortedData, currentPage);
+             });
+        });
+    </script>
+</body>
+</html>

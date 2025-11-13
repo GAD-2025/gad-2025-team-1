@@ -1,0 +1,294 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+}
+
+.starfield-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 50px 50px, #fff, rgba(0,0,0,0));
+    background-size: 200px 200px;
+    animation: twinkle 5s infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Header */
+/* --- 상단바 (Header) 스타일 --- */
+.main-header {
+    width: 100%;
+    height: 60px; /* 상단바 높이 */
+    background-color: black; /* 배경 검은색 */
+    color: white;
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝과 가운데 정렬 */
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid #333; /* 섹션 구분을 위한 얇은 선 */
+    box-sizing: border-box; /* 패딩이 전체 너비에 포함되도록 */
+    position: sticky; /* 상단 고정 (선택 사항) */
+    top: 0;
+    z-index: 100;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+/* 1. 왼쪽 섹션: 로고 */
+.header-logo {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+/* 2. 가운데 섹션: 메뉴 */
+.header-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 30px; /* 메뉴 간 간격 */
+}
+
+.header-menu a {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 1em;
+    padding: 0 5px;
+    transition: color 0.2s, border-bottom 0.2s;
+}
+
+.header-menu a:hover,
+.header-menu a.active {
+    color: white;
+    border-bottom: 2px solid #FF5900; /* ✨ 포인트 컬러로 현재 페이지 강조 */
+}
+
+/* 3. 오른쪽 섹션: 프로필 위젯 */
+.user-profile-widget {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 10px;
+}
+
+/* 작은 프로필 사진 (원형) */
+.widget-profile-img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #FF5900; /* ✨ 포인트 컬러 테두리 */
+}
+
+.widget-info {
+    display: flex;
+    flex-direction: column; /* 이름과 뱃지를 두 줄로 나눔 */
+    align-items: flex-start; /* 왼쪽 정렬 */
+    line-height: 1.3;
+}
+
+.widget-user-name {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    margin-top: -3px; /* 이름 위치 조정 */
+}
+
+/* '구매자' 뱃지 */
+.widget-badge-buyer {
+    font-size: 0.6em; /* 작게 */
+    background-color: #555; /* 구매자는 차분한 색상 */
+    color: white;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: normal;
+}
+
+/* Archive Container */
+.archive-container {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.archive-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.archive-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+    font-weight: 300;
+}
+
+.archive-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 30px;
+}
+
+.count-number {
+    font-size: 48px;
+    color: #FF6B00;
+    font-weight: bold;
+}
+
+.count-label {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.search-bar input {
+    width: 400px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.3);
+    border-radius: 25px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.search-bar input::placeholder {
+    color: #888;
+}
+
+.search-btn {
+    padding: 12px 30px;
+    background: #FF6B00;
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.search-btn:hover {
+    background: #e85a00;
+}
+
+/* Filter Bar */
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+    padding-bottom: 15px;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 12px;
+    transition: color 0.3s;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    color: #FF6B00;
+}
+
+/* Artwork Grid */
+.artwork-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 25px;
+}
+
+.artwork-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 107, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+
+.artwork-item:hover {
+    border-color: rgba(255, 107, 0, 0.6);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(255, 107, 0, 0.2);
+}
+
+.item-thumbnail {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.item-info {
+    padding: 15px;
+    font-size: 12px;
+}
+
+.item-title {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.item-artist {
+    color: #FF6B00;
+    margin-bottom: 5px;
+}
+
+.item-date {
+    color: #aaa;
+    margin-bottom: 3px;
+}
+
+.item-purchase {
+    color: #aaa;
+    margin-bottom: 8px;
+}
+
+.item-badge {
+    display: inline-block;
+    background: rgba(255, 107, 0, 0.3);
+    color: #FF6B00;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}

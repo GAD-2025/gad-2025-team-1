@@ -1,0 +1,212 @@
+작품 상세 페이지.css
+:root {
+    --color-bg-dark: #0a0a0a;
+    --color-accent-orange: #ff5722;
+    /* 탐색 페이지에서 사용된 작품 색상 변수 (공유) */
+    --color-art1: #38761d;
+    --color-art2: #674ea7;
+    --color-art3: #1c4587;
+    --color-app: #783f04;
+    --color-marketing: #cc0000;
+}
+
+/* --- 상단바 (Header) 스타일 --- */
+.main-header {
+    width: 100%;
+    height: 60px; /* 상단바 높이 */
+    background-color: black; /* 배경 검은색 */
+    color: white;
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝과 가운데 정렬 */
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid #333; /* 섹션 구분을 위한 얇은 선 */
+    box-sizing: border-box; /* 패딩이 전체 너비에 포함되도록 */
+    position: sticky; /* 상단 고정 (선택 사항) */
+    top: 0;
+    z-index: 100;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+/* 1. 왼쪽 섹션: 로고 */
+.header-logo {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+/* 2. 가운데 섹션: 메뉴 */
+.header-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 30px; /* 메뉴 간 간격 */
+}
+
+.header-menu a {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 1em;
+    padding: 0 5px;
+    transition: color 0.2s, border-bottom 0.2s;
+}
+
+.header-menu a:hover,
+.header-menu a.active {
+    color: white;
+    border-bottom: 2px solid #FF5900; /* ✨ 포인트 컬러로 현재 페이지 강조 */
+}
+
+/* 3. 오른쪽 섹션: 프로필 위젯 */
+.user-profile-widget {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 10px;
+}
+
+/* 작은 프로필 사진 (원형) */
+.widget-profile-img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #FF5900; /* ✨ 포인트 컬러 테두리 */
+}
+
+.widget-info {
+    display: flex;
+    flex-direction: column; /* 이름과 뱃지를 두 줄로 나눔 */
+    align-items: flex-start; /* 왼쪽 정렬 */
+    line-height: 1.3;
+}
+
+.widget-user-name {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    margin-top: -3px; /* 이름 위치 조정 */
+}
+
+/* '구매자' 뱃지 */
+.widget-badge-buyer {
+    font-size: 0.6em; /* 작게 */
+    background-color: #555; /* 구매자는 차분한 색상 */
+    color: white;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: normal;
+}
+
+/* [START: 공유 바디 스타일 가이드 적용] */
+body {
+    font-family: Arial, sans-serif;
+    color: #ccc; /* Global Text Color */
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    
+    /* 배경 스타일 (CSS 그라데이션 기반의 다크 테마) */
+    background-color: #050510;
+    background-image: 
+        radial-gradient(ellipse at center, rgba(17, 24, 39, 0.9) 0%, rgba(5, 5, 16, 1) 90%);
+    background-attachment: fixed;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 안정적인 외부 우주 이미지 URL을 배경으로 사용 */
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg'); 
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    opacity: 0.4;
+    z-index: -1;
+}
+/* [END: 공유 바디 스타일 가이드 적용] */
+
+
+/* 공유 UI 요소 스타일 */
+.cta-button {
+    background-color: var(--color-accent-orange);
+    transition: all 0.2s;
+}
+.cta-button:hover {
+    background-color: #e64a19;
+    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+}
+
+/* 커스텀 스크롤바 */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #222;
+}
+
+/* 프롬프트 블러 효과 */
+.blur-text {
+    filter: blur(4px);
+    user-select: none;
+    pointer-events: none;
+}
+
+/* 커스텀 AI 로고 (SVG) */
+.ai-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #333;
+}
+
+/* 새로운 주황색 테두리 스타일 */
+.orange-border-box {
+    border: 3px solid var(--color-accent-orange);
+    box-shadow: 0 0 15px rgba(255, 87, 34, 0.5); /* 은은한 주황색 후광 효과 */
+    background-color: #1D1D1D; /* 내부 배경 유지 */
+}
+
+/* 프롬프트 버튼 스타일 */
+.prompt-btn {
+    background-color: #FFFBEB; /* 베이지 배경 (Tailwind amber-100) */
+    border: 1px solid var(--color-accent-orange);
+    color: var(--color-accent-orange);
+    font-size: 0.875rem; /* text-sm */
+    padding: 0.5rem 0.75rem; /* py-2 px-3 */
+    border-radius: 0.5rem; /* rounded-lg */
+    transition: all 0.2s;
+    display: flex; /* 아이콘과 텍스트를 한 줄에 */
+    align-items: center;
+    white-space: nowrap; /* 텍스트가 한 줄로 유지되도록 */
+}
+.prompt-btn:hover {
+    background-color: #FFE0B2; /* hover 시 조금 더 진한 베이지 */
+    box-shadow: 0 2px 10px rgba(255, 87, 34, 0.2);
+}
+.prompt-btn i {
+    margin-right: 0.25rem; /* 아이콘과 텍스트 사이 간격 */
+}
