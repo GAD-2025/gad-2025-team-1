@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="detail-title">작품 상세</title>
+    <link rel="stylesheet" href="/frontend/style/archive_detail
+.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <div class="starfield-bg"></div>
+
+    <header class="main-header">
+        <nav class="header-menu">
+            <a href="#" class="menu-item">거래하기</a>
+            <a href="./작품보관함.html" class="menu-item active">작품 보관함</a>
+            <a href="#" class="menu-item">마이 스페이스</a>
+            <a href="#" class="menu-item">설정</a>
+        </nav>
+        <div class="header-right">
+            <span class="user-name">김민지님</span>
+            <span class="user-badge">구매자</span>
+        </div>
+    </header>
+
+    <main class="detail-container">
+        <div class="detail-content">
+            <div class="detail-left">
+                <h2 id="artwork-title" class="artwork-title">동화의 꿀</h2>
+                
+                <div class="detail-info">
+                    <div class="info-row">
+                        <span class="info-label">작가 :</span>
+                        <span id="artwork-artist" class="info-value">404 Creator</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">생성일 :</span>
+                        <span id="artwork-created" class="info-value">25/10/1</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">최종 수정일 :</span>
+                        <span id="artwork-modified" class="info-value">25/10/4</span>
+                    </div>
+                </div>
+
+                <div class="description-box">
+                    <h3>프롬프트 에디터</h3>
+                    <p id="artwork-prompt" class="prompt-text">
+                        우아한 고양이가 커다란 찻잔 위에 앉아 있으며, 주변에는 커피와 초콜릿, 아이스크림 같은 카페 아이템들이 산재해 있다. 따뜻하고 아늑한 분위기, 파스텔 톤의 색감.
+                    </p>
+                </div>
+
+                <div class="ai-tools">
+                    <h3>AI 툴</h3>
+                    <div class="tool-icons">
+                        <div class="tool-icon">
+                            <span class="icon-placeholder">🎨</span>
+                        </div>
+                        <div class="tool-icon">
+                            <span class="icon-placeholder">✨</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-share">공유하기</button>
+                    <button class="btn-edit">저장</button>
+                </div>
+            </div>
+
+            <div class="detail-right">
+                <div class="image-container">
+                    <img id="artwork-image" src="../이미지/네온플라워.png" alt="작품 이미지" class="artwork-image">
+                </div>
+                
+                <button class="btn-download">텍스트 인정</button>
+            </div>
+        </div>
+
+        <div class="ideas-section">
+            <h3>아이디어 PLUS</h3>
+            <div class="ideas-grid">
+                <div class="idea-card">
+                    <p class="idea-title">Idea 1</p>
+                    <p class="idea-text">보색이 전혀 다를게 수정하지 않을까?</p>
+                </div>
+                <div class="idea-card">
+                    <p class="idea-title">Idea 2</p>
+                    <p class="idea-text">이미지에 사람 얼굴 요소를 더 넣어봐도 괜찮을까?</p>
+                </div>
+                <div class="idea-card">
+                    <p class="idea-title">Idea 3</p>
+                    <p class="idea-text">이미지의 배경을 어떻게 변경하니까?</p>
+                </div>
+            </div>
+            <button class="btn-more-idea">다음보기</button>
+        </div>
+    </main>
+
+    <script src="../backend/archive_detail
+.js"></script>
+</body>
+</html>
