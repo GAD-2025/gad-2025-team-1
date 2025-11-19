@@ -16,7 +16,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('/frontend/images/space_background.jpg'); /* ✨ 우주 이미지 경로 설정 */
+    background-image: url('/gad-2025-team-1/frontend/images/space_background.jpg'); /* ✨ 우주 이미지 경로 설정 */
     background-size: cover; /* 이미지가 화면을 꽉 채우도록 */
     background-repeat: no-repeat; /* 이미지 반복 방지 */
     background-position: center center; /* 이미지가 항상 중앙에 오도록 */
