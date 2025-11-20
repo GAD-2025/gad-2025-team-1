@@ -1,3 +1,4 @@
+작품 상세  ---------- 
 * {
     margin: 0;
     padding: 0;
@@ -58,7 +59,7 @@ body {
 
 /* 1. 왼쪽 섹션: 로고 */
 .header-logo {
-    font-size: 1.5em;
+    font-size: 1em; /* 기존 1.5em -> 작게 조정 (archive.css와 동일) */
     font-weight: bold;
     text-decoration: none;
     color: white;
@@ -76,7 +77,7 @@ body {
 .header-menu a {
     text-decoration: none;
     color: #ccc;
-    font-size: 1em;
+    font-size: 0.5em; /* 기존 1em -> 작게 조정 */
     padding: 0 5px;
     transition: color 0.2s, border-bottom 0.2s;
 }
@@ -86,7 +87,6 @@ body {
     color: white;
     border-bottom: 2px solid #FF5900; /* ✨ 포인트 컬러로 현재 페이지 강조 */
 }
-
 /* 3. 오른쪽 섹션: 프로필 위젯 */
 .user-profile-widget {
     display: flex;
@@ -112,16 +112,15 @@ body {
 }
 
 .widget-user-name {
-    font-size: 0.9em;
+    font-size: 0.5em; /* 기존 0.9em -> 작게 조정 */
     font-weight: bold;
     color: white;
-    margin-top: -3px; /* 이름 위치 조정 */
+    margin-top: -3px;
 }
 
-/* '구매자' 뱃지 */
 .widget-badge-buyer {
-    font-size: 0.6em; /* 작게 */
-    background-color: #555; /* 구매자는 차분한 색상 */
+    font-size: 0.3em; /* 기존 0.6em -> 작게 조정 */
+    background-color: #555;
     color: white;
     padding: 2px 5px;
     border-radius: 4px;
@@ -194,6 +193,7 @@ body {
     border-radius: 8px;
     padding: 20px;
     backdrop-filter: blur(10px);
+    
 }
 
 .description-box h3 {
@@ -278,15 +278,152 @@ body {
     border-color: rgba(255, 107, 0, 0.6);
 }
 
-/* Image Container */
 .image-container {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 107, 0, 0.2);
     border-radius: 8px;
     overflow: hidden;
-    aspect-ratio: 1;
+    aspect-ratio: 4 / 3;    /* 기존 1 -> 4:3으로 세로 길이 줄임 (원하면 16/9, 3/4 등으로 조정) */
+    width: 100%;
+    max-width: 620px;       /* 최대 너비 제한 — 필요시 조정 */
+    height: auto;
 }
 
+/* ...existing code... */
+/* 새 텍스트 편집 버튼 (이미지 컨테이너 우측 하단에 고정) */
+.btn-text-edit {
+    position: absolute;
+    top: 360px;
+    bottom: 5px;
+    right: 200px;
+    padding: 0.5px 50px;
+    background: #FF6B00;   
+    height: 34px;     
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 8;
+    transition: background 0.18s ease, transform 0.06s ease;
+}
+
+.btn-text-edit:hover { background: #e85a00; }
+.btn-text-edit:active { transform: translateY(1px); }
+.btn-long {
+    position: absolute;
+    bottom: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;                    /* 얇게 */
+    padding: 0 22px;                 /* 길게 */
+    background: rgba(255,255,255,0.03); /* 아이디어 박스 느낌 */
+    border: 1px solid rgba(255,107,0,0.2);
+    border-radius: 8px;
+    color: #FF6B00;
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    z-index: 8;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.06s ease;
+}
+/* 개별 위치 조정 (이미지 넓이에 따라 값 조정 가능) */
+.btn-share-long { right: 350px; }   /* 텍스트 편집 버튼 왼쪽에 위치 */
+.btn-save-long  { right: 450px; }   /* 공유 버튼 왼쪽에 위치 */
+
+.btn-long:hover {
+    background: rgba(255,107,0,0.06);
+    border-color: rgba(255,107,0,0.6);
+}
+
+/* 모바일에서 절대 위치 해제하여 세로로 쌓이게 함 */
+@media (max-width: 768px) {
+    .btn-text-edit, .btn-long {
+        position: static;
+        display: inline-block;
+        margin: 6px 8px 0 0;
+    }
+}
+
+
+/* ...existing code... */
+.image-container { position: relative; /* 이미 존재하면 유지 */ }
+
+.prompt-label {
+    position: absolute;
+    top: 20px;          /* 필요시 조정 */
+    font-size: 16px;     /* 텍스트 크기: 여기 숫자를 줄이면 더 작아짐 */
+    line-height: 1;
+    left: 12px;
+    color: rgba(232,238,248,0.9);
+    padding: 4px 6px;
+    border-radius: 4px;
+    z-index: 6;
+    pointer-events: none;
+}
+
+.image-prompt-small {
+    font-size: 12px;
+    line-height: 1;
+    color: rgba(232,238,248,0.9);
+    max-height: 260px; /* 스크롤 영역 확장 (원하면 숫자 조정 가능) */
+    overflow: auto;
+    margin: 0;
+    white-space: pre-wrap;
+}
+.image-prompt-overlay {
+    position: absolute;
+    top: 70px;          /* ↓ 오버레이 전체 위치 (원하면 300px 등으로 더 내리세요) */
+    right: 4px;
+    left: 8px;
+    width: 520px;
+    max-width: calc(100% - 24px);
+    background: rgba(0,0,0,0.45);
+    border-radius: 8px;
+    padding: 10px;
+    backdrop-filter: blur(6px);
+    z-index: 6;
+    pointer-events: auto;
+    max-height: 200px;
+    overflow: hidden;
+}
+
+.image-prompt-small::-webkit-scrollbar { width: 10px; }
+.image-prompt-small::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 6px; }
+/* ...existing code... */
+
+/* 색 토큰: 화면에는 모두 환한 하늘색(#87CEEB)으로 보이도록 */
+.color-token {
+    color: #87CEEB;
+    background: transparent;
+    border: none;
+    padding: 0 4px;
+    margin: 0 2px;
+    font-weight: 700;
+    font-size: inherit;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: baseline;
+    border-radius: 4px;
+    transition: transform 0.08s ease, opacity 0.18s ease;
+}
+
+.color-token:active { transform: scale(0.96); }
+
+.color-token.copied {
+    
+    
+    opacity: 0.7;
+    filter: drop-shadow(0 0 6px rgba(135,206,235,0.45));
+}
+
+.image-prompt-small::-webkit-scrollbar { height: 6px; width: 6px; }
+.image-prompt-small::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 6px; }
+/* ...existing code... */
 .artwork-image {
     width: 100%;
     height: 100%;
@@ -312,6 +449,15 @@ body {
 /* Ideas Section */
 .ideas-section {
     margin-top: 50px;
+}
+.ideas-section {
+    /* 오른쪽 사이드바처럼 보이게 절대 위치 지정 (기존 레이아웃 변경 최소화) */
+    position: absolute;
+    top: 450px;        /* 필요하면 값 조정 */
+    right: 40px;      /* 페이지 오른쪽 여백 위치 */
+    width: 500px;     /* 사이드바 너비 — 원하는 값으로 조정 */
+    margin-top: 0;
+    z-index: 5;
 }
 
 .ideas-section h3 {

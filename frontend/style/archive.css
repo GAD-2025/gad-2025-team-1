@@ -1,3 +1,5 @@
+
+
 * {
     margin: 0;
     padding: 0;
@@ -58,7 +60,7 @@ body {
 
 /* 1. 왼쪽 섹션: 로고 */
 .header-logo {
-    font-size: 1.5em;
+    font-size: 0.em; /* 기존 1.5em -> 작게 조정 (archive.css와 동일) */
     font-weight: bold;
     text-decoration: none;
     color: white;
@@ -76,7 +78,7 @@ body {
 .header-menu a {
     text-decoration: none;
     color: #ccc;
-    font-size: 1em;
+    font-size: 0.5em; /* 기존 1em -> 작게 조정 */
     padding: 0 5px;
     transition: color 0.2s, border-bottom 0.2s;
 }
@@ -112,16 +114,16 @@ body {
 }
 
 .widget-user-name {
-    font-size: 0.9em;
+    font-size: 0.5em; /* 기존 0.9em -> 작게 조정 */
     font-weight: bold;
     color: white;
-    margin-top: -3px; /* 이름 위치 조정 */
+    margin-top: -3px;
 }
 
-/* '구매자' 뱃지 */
+/* 구매자 뱃지 텍스트 더 작게 */
 .widget-badge-buyer {
-    font-size: 0.6em; /* 작게 */
-    background-color: #555; /* 구매자는 차분한 색상 */
+    font-size: 0.3em; /* 기존 0.6em -> 작게 조정 */
+    background-color: #555;
     color: white;
     padding: 2px 5px;
     border-radius: 4px;
@@ -143,8 +145,8 @@ body {
 }
 
 .archive-title {
-    font-size: 28px;
-    margin-bottom: 20px;
+    font-size: 20px;     /* 변경: 기존 28px -> 작게 */
+    margin-bottom: 12px; /* 아래 간격 축소 */
     font-weight: 300;
 }
 
@@ -157,7 +159,7 @@ body {
 }
 
 .count-number {
-    font-size: 48px;
+    font-size: 70px;
     color: #FF6B00;
     font-weight: bold;
 }
@@ -189,6 +191,8 @@ body {
 }
 
 .search-btn {
+    font-size: 0.6rem;
+    font-weight: 200;
     padding: 12px 30px;
     background: #FF6B00;
     border: none;
@@ -264,9 +268,10 @@ body {
 }
 
 .item-title {
-    color: #fff;
-    font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 0.65rem;  /* 기존보다 약간 큼 */
+    font-weight: 400;    /* 얇게 (읽기 좋게) */
+    color: #ffffff;
+    margin-bottom: 6px;
 }
 
 .item-artist {
@@ -287,8 +292,13 @@ body {
 .item-badge {
     display: inline-block;
     background: rgba(255, 107, 0, 0.3);
-    color: #FF6B00;
+    color: #ffffff; /* 변경: 텍스트를 하얀색으로 */
     padding: 3px 8px;
     border-radius: 4px;
     font-size: 11px;
 }
+
+
+
+
+
