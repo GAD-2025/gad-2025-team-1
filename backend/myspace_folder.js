@@ -1,4 +1,5 @@
 // archive.js
+
 $(document).ready(function() {
     const $modal = $('#imageModal');
     const $modalImage = $('#modalImage');
