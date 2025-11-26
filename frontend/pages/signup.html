@@ -198,11 +198,51 @@
                     ]
                 };
 
-                // 3. 저장 (지금은 1명의 유저만 관리하므로 덮어쓰기)
-                localStorage.setItem('myspaceData', JSON.stringify(newUserSpace));
-                
-                // (심화) 만약 여러 유저를 로그인/로그아웃 하려면 'users' 배열을 따로 관리해야 함
-                // 현재는 "가입 = 즉시 해당 유저로 세팅" 컨셉입니다.
+               // signup.html의 <script> 내부 수정
+
+$('#signupForm').on('submit', async function(e) { // async 키워드 추가
+    e.preventDefault();
+
+    const userId = $('#userId').val();
+    const userPw = $('#userPw').val();
+    const userPwConfirm = $('#userPwConfirm').val();
+    const userName = $('#userName').val();
+    
+    // 유효성 검사 (기존 유지)
+    if(userId.length < 4) { alert('아이디는 4글자 이상이어야 합니다.'); return; }
+    if(userPw !== userPwConfirm) { $('#pwError').show(); return; }
+
+    // 서버로 보낼 데이터 객체 만들기
+    const userData = {
+        id: userId,
+        password: userPw,
+        name: userName,
+        email: $('#userEmail').val(),
+        type: $('input[name="userType"]:checked').val(),
+        bio: $('#userBio').val() || "안녕하세요!",
+    };
+
+    try {
+        // [핵심] 서버(Backend)에게 회원가입 요청 보내기
+        const response = await fetch('http://localhost:3000/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert(`${userName}님 가입을 축하합니다! 로그인 페이지로 이동합니다.`);
+            location.href = 'login.html';
+        } else {
+            alert('회원가입 실패: ' + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('서버와 통신 중 오류가 발생했습니다.');
+    }
+});
 
                 alert(`${userName}님, 환영합니다! 마이 스페이스가 생성되었습니다.`);
                 

@@ -112,6 +112,50 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../../backend/myspace.js"></script> </body>
     <script>
+/* myspace.html 또는 explore.html의 <script> 내부 */
+
+// 1. 서버 주소 (서버가 3000포트에서 돌고 있음)
+const API_URL = 'http://localhost:3000/api/posts';
+
+// 2. 데이터 가져오기 (fetch 함수 사용)
+async function fetchPosts() {
+    try {
+        const response = await fetch(API_URL);
+        
+        // 응답 상태 확인
+        if (!response.ok) {
+            throw new Error('데이터를 불러오는데 실패했습니다.');
+        }
+
+        // JSON 데이터로 변환
+        const data = await response.json();
+        
+        console.log("서버에서 가져온 데이터:", data);
+        
+        // 3. 화면에 그리기 (예시 함수)
+        renderPosts(data); 
+
+    } catch (error) {
+        console.error("에러 발생:", error);
+    }
+}
+
+// 화면에 데이터를 뿌려주는 함수 (예시)
+function renderPosts(posts) {
+    // 예: orbit-grid 영역에 이미지 추가하기
+    // const container = document.getElementById('orbitGridArea'); 
+    // container.innerHTML = '';
+    
+    posts.forEach(post => {
+        console.log(`제목: ${post.title}, 작가: ${post.author}`);
+        // 여기에 HTML 생성 코드를 넣으면 됩니다.
+    });
+}
+
+// 페이지 로드 시 실행
+document.addEventListener("DOMContentLoaded", fetchPosts);
+
+
     /* myspace.html 하단에 추가할 스크립트 */
     document.addEventListener("DOMContentLoaded", function() {
         // 1. 저장된 데이터 불러오기
