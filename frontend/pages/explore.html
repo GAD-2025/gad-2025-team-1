@@ -3,25 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 아트 마켓플레이스 - 탐색 대시보드</title>
-    <!-- Tailwind CSS CDN -->
+    <title>AI 아트 마켓플레이스 - 탐색 (최종 완성본)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font: Inter (Arial로 대체) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../frontend/style/explore.css">
+    <style>
+        /* [스타일 설정] 다크 코스믹 테마 */
+        :root {
+            --color-accent-orange: #ff5722;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: black;
+            color: #ccc;
+            overflow-x: hidden;
+            position: relative; 
+            min-height: 100vh;
+        }
+
+        /* 우주 배경 설정 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg'); 
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            opacity: 0.4;
+            z-index: -1;
+        }
+        
+        .cta-button {
+            background-color: var(--color-accent-orange);
+            transition: all 0.2s;
+        }
+        .cta-button:hover {
+            background-color: #e64a19;
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+        }
+
+        .logo-placeholder {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+        }
+        .logo-placeholder .ai {
+            color: var(--color-accent-orange);
+        }
+
+        /* 모달 스타일 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* 배경 더 어둡게 */
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            color: #333;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; 
+        }
+    </style>
 </head>
 <body class="antialiased">
 
+    <div id="artworkDetailModal" class="modal-overlay">
+        <div class="modal-content relative max-w-3xl w-full mx-4 text-left">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
 
-    <!-- Content Wrapper -->
-    <div class="">
+            <div class="flex flex-col md:flex-row gap-8">
+                <div id="modalImageArea" class="w-full md:w-1/2 aspect-square md:h-80 rounded-xl bg-gray-200 flex items-center justify-center text-gray-400 shadow-inner">
+                    <span class="text-sm">Artwork Image Preview</span>
+                </div>
 
-       <header class="main-header">
-    <div class="header-section header-left">
-        <a href="../../frontend/pages/explore.html" class="header-logo">
-            <span style="color: #FF5900;">creAItive</span>
-        </a>
-    </div>
+                <div class="w-full md:w-1/2 flex flex-col justify-between">
+                    <div>
+                        <span id="modalCategory" class="text-xs font-bold text-orange-500 tracking-wider uppercase mb-2 block">CATEGORY</span>
+                        <h2 id="modalArtworkTitle" class="text-3xl font-extrabold mb-2 text-gray-900 leading-tight">작품명</h2>
+                        <div class="flex items-center gap-2 mb-6">
+                             <div class="w-6 h-6 rounded-full bg-gray-300"></div>
+                             <p class="text-sm text-gray-600">By <span id="modalAuthor" class="font-semibold text-gray-900">작가명</span></p>
+                        </div>
+                        
+                        <div class="border-t border-b border-gray-100 py-4 mb-6">
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                이 작품은 AI가 생성한 고유한 디지털 자산입니다. 구매 시 상업적 이용이 가능한 라이선스가 포함되며, 고해상도 원본 파일을 다운로드할 수 있습니다.
+                            </p>
+                        </div>
+                    </div>
 
     <nav class="header-section header-center">
         <ul class="header-menu">
@@ -35,341 +137,607 @@
    <div class="header-section header-right">
         <a href="../../frontend/pages/login.html" class="login-button">로그인</a>
     </div>
-</header>
+    
+    <div>
+        <header class="sticky top-0 z-[100] bg-gray-900/90 backdrop-blur-md shadow-lg border-b border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <a href="#" class="logo-placeholder" onclick="resetSearch(event)">
+                        cre<span class="ai">AI</span>tive
+                    </a>
+                    
+                    <nav class="hidden md:flex space-x-6">
+                        <a href="#" class="text-gray-300 hover:text-white transition">거래하기</a>
+                        <button class="text-gray-300 hover:text-white transition">작품 보관함</button>
+                        <button class="text-gray-300 hover:text-white transition">마이스페이스</button>
+                        <button class="text-gray-300 hover:text-white transition">설정</button>
+                    </nav>
+
+                    <div class="flex items-center space-x-6">
+                        <div class="relative cursor-pointer group" title="장바구니">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-300 group-hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span id="cartCountBadge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 animate-bounce">0</span>
+                        </div>
+
+                        <button class="bg-white text-gray-900 px-5 py-2 font-bold rounded-full text-sm hover:bg-gray-200 transition">로그인</button>
+                    </div>
+                </div>
+            </div>
+        </header>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-            <!-- 2. Hero Section & Search -->
-            <section class="py-16 md:py-24 text-center">
-                <!-- 문구 색상 변경 (주황색) -->
-                <h1 class="text-4xl md:text-6xl font-extrabold mb-4 text-orange-500">당신의 영감을 찾아보세요!</h1>
-                <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                    최신 트렌드의 작품부터 희귀한 보석같은 작품까지, 지금 바로 탐색을 시작하세요!
+            <section class="py-12 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold mb-4 text-orange-500 drop-shadow-lg">당신의 영감을 찾아보세요!</h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto font-light">
+                    최신 트렌드의 작품부터 희귀한 보석같은 작품까지,<br>지금 바로 탐색을 시작하세요!
                 </p>
                 
-                <!-- Search Bar - Placeholder 변경 및 기능 유지 -->
-                <div class="flex max-w-3xl mx-auto p-2 bg-gray-800 rounded-full shadow-2xl">
-                    <input type="text" id="searchInput" placeholder="작품명, 작가, 태그 검색..." 
-                           class="flex-grow bg-transparent p-3 text-white focus:outline-none placeholder-gray-400 rounded-l-full">
-                    <button onclick="handleSearch()" class="search-btn cta-button text-white px-6 py-3 font-semibold rounded-full hover:opacity-90 transition duration-200">
-                        검색
+                <div class="relative max-w-3xl mx-auto z-50">
+                    <div class="flex p-2 bg-gray-800 rounded-full shadow-2xl border border-gray-700 focus-within:border-orange-500 transition-colors">
+                        <input type="text" id="searchInput" 
+                               placeholder="작품명, 작가, #태그 검색 (예: 몽환, 김작가)" 
+                               autocomplete="off"
+                               class="flex-grow bg-transparent p-3 pl-6 text-white focus:outline-none placeholder-gray-400 rounded-l-full"
+                               onfocus="showRecentSearches()"
+                               onblur="hideRecentSearchesWithDelay()">
+                        <button onclick="executeSearch()" class="search-btn cta-button text-white px-8 py-3 font-semibold rounded-full hover:opacity-90 transition">
+                            검색
+                        </button>
+                    </div>
+
+                    <div id="recentSearchDropdown" class="hidden absolute top-full left-4 right-4 mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+                        <div class="px-4 py-3 bg-gray-800/80 text-xs text-gray-500 font-bold border-b border-gray-700 flex justify-between items-center backdrop-blur-sm">
+                            <span>최근 검색어</span>
+                            <button onclick="clearRecentSearches()" class="text-gray-500 hover:text-red-400 transition underline">전체 삭제</button>
+                        </div>
+                        <ul id="recentSearchList" class="text-left py-1">
+                            </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+                    <button class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-4 py-1.5 rounded-full transition" onclick="searchKeyword('트렌디')">#트렌디</button>
+                    <button class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-4 py-1.5 rounded-full transition" onclick="searchKeyword('미니멀')">#미니멀</button>
+                    <button class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-4 py-1.5 rounded-full transition" onclick="searchKeyword('추상')">#추상</button>
+                    <button class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-4 py-1.5 rounded-full transition" onclick="searchKeyword('풍경화')">#풍경화</button>
+                    <button class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-4 py-1.5 rounded-full transition" onclick="searchKeyword('컨셉아트')">#컨셉아트</button>
+                </div>
+            </section>
+
+            <div class="border-t border-gray-800 my-10"></div>
+
+            <section id="searchResultsSection" class="hidden mb-20 relative min-h-[500px]">
+                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white mb-2">검색 결과 <span id="resultCount" class="text-orange-500 text-xl ml-2">(0건)</span></h2>
+                        <p class="text-gray-400">검색어: "<span id="currentQuery" class="text-white font-semibold"></span>"</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl mb-8 flex flex-col xl:flex-row gap-4 justify-between items-center border border-gray-700 shadow-lg">
+                    <div class="flex flex-wrap gap-2 w-full xl:w-auto items-center justify-center md:justify-start">
+                        <select id="filterCategory" onchange="applyFilters()" class="bg-gray-900 text-gray-300 text-sm border border-gray-600 rounded-lg p-2.5 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                            <option value="all">모든 카테고리</option>
+                            <option value="이미지 생성">이미지 생성</option>
+                            <option value="어플 디자인">어플 디자인</option>
+                            <option value="마케팅 배너">마케팅 배너</option>
+                            <option value="일러스트">일러스트</option>
+                            <option value="컨셉아트">컨셉아트</option>
+                        </select>
+                        <select id="filterPrice" onchange="applyFilters()" class="bg-gray-900 text-gray-300 text-sm border border-gray-600 rounded-lg p-2.5 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                            <option value="all">모든 가격</option>
+                            <option value="free">무료 (0C)</option>
+                            <option value="low">100C 이하</option>
+                            <option value="mid">100C ~ 300C</option>
+                            <option value="high">300C 초과</option>
+                        </select>
+                        <button id="btnToggleLike" onclick="toggleLikedFilter()" class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold border transition duration-200 bg-gray-900 border-gray-600 text-gray-400 hover:text-white hover:border-red-500">
+                            <span class="text-red-500 text-lg">♥</span> 찜한 작품만
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full xl:w-auto justify-end">
+                        <label for="sortOrder" class="text-sm text-gray-400 whitespace-nowrap">정렬:</label>
+                        <select id="sortOrder" onchange="applyFilters()" class="bg-gray-900 text-white text-sm border border-gray-600 rounded-lg p-2.5 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                            <option value="relevance">관련도순</option>
+                            <option value="latest">최신순</option>
+                            <option value="popular">인기순</option>
+                            <option value="price_asc">가격 낮은순</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    </div>
+
+                <div id="loadMoreContainer" class="hidden text-center mt-12">
+                    <button onclick="loadMoreItems()" class="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-full border border-gray-600 transition duration-200 flex items-center justify-center mx-auto gap-2 group">
+                        <span>더 보기</span>
+                        <svg class="w-4 h-4 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
-                </div>
-                
-                <!-- Keyword Boxes (Search Filters) - 키워드 클릭 시 모달 동작 유지 -->
-                <div class="mt-6 flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
-                    <span class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-3 py-1 rounded-full cursor-pointer transition duration-150" onclick="openModal('#트렌디')">#트렌디</span>
-                    <span class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-3 py-1 rounded-full cursor-pointer transition duration-150" onclick="openModal('#미니멀')">#미니멀</span>
-                    <span class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-3 py-1 rounded-full cursor-pointer transition duration-150" onclick="openModal('#추상')">#추상</span>
-                    <span class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-3 py-1 rounded-full cursor-pointer transition duration-150" onclick="openModal('#풍경화')">#풍경화</span>
-                    <span class="text-xs md:text-sm bg-gray-700/50 hover:bg-gray-600/70 text-gray-300 px-3 py-1 rounded-full cursor-pointer transition duration-150" onclick="openModal('#컨셉아트')">#컨셉아트</span>
-                </div>
-            </section>
-
-            <!-- Divider -->
-            <div class="border-t border-gray-800 my-10"></div>
-
-            <!-- 3. Curated Works Section (금주의 추천 작품) -->
-            <section class="mb-20">
-                <!-- Logo and CTA Text -->
-                <div class="flex items-baseline justify-start space-x-4 mb-4">
-                     <span class="logo-placeholder text-2xl">
-                        cre<span class="ai">AI</span>tive
-                    </span>
-                    <span class="text-2xl md:text-3xl font-bold text-white">금주의 추천 작품</span>
-                </div>
-                <p class="text-lg text-gray-400 mb-8">
-                    AI 아트 큐레이터가 필요한 상황에 맞춰 작품을 엄선했어요.
-                </p>
-
-                <!-- Curated Works Grid (Matching Prototype Style) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <!-- Column 1: Image Generation -->
-                    <a href="../../frontend/pages/marketplace_detail.html"><div class="p-6 rounded-xl cursor-pointer transition duration-300 hover:ring-2 hover:ring-white" style="background-color: var(--color-art1);" onclick="openModal('Art 1')">
-                        <span class="text-xs font-semibold uppercase tracking-wider bg-yellow-300 text-gray-900 px-2 py-0.5 rounded-full mb-2 inline-block">NEW</span>
-                        <h3 class="text-3xl font-bold mb-1">Art 1</h3>
-                        <p class="text-sm opacity-80 mb-4">몽상의 숲</p>
-                        <p class="text-base font-medium">이미지 생성 섹션</p>
-                    </div></a>
-
-                    <!-- Column 2: App Design -->
-                    <div class="p-6 rounded-xl cursor-pointer transition duration-300 hover:ring-2 hover:ring-white" style="background-color: var(--color-art2);" onclick="openModal('Art 2')">
-                        <h3 class="text-3xl font-bold mb-1">Art 2</h3>
-                        <p class="text-sm opacity-80 mb-4">도시적 디자이너</p>
-                        <p class="text-base font-medium">어플 디자인 섹션</p>
-                    </div>
-
-                    <!-- Column 3: Marketing Banner -->
-                    <div class="p-6 rounded-xl cursor-pointer transition duration-300 hover:ring-2 hover:ring-white" style="background-color: var(--color-art3);" onclick="openModal('Art 3')">
-                        <h3 class="text-3xl font-bold mb-1">Art 3</h3>
-                        <p class="text-sm opacity-80 mb-4">미래 건축</p>
-                        <p class="text-base font-medium">마케팅 배너 섹션</p>
-                    </div>
+                    <p class="text-gray-500 text-sm mt-3">
+                        <span id="displayedCount">0</span> / <span id="totalCount">0</span> 작품 표시 중
+                    </p>
                 </div>
 
-                <!-- Additional Curated Rows (App Design and Marketing Banner) -->
-                <div class="mt-10">
-                    <h4 class="text-xl font-bold mb-4">어플 디자인 추천</h4>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <!-- 5 App Design Thumbnails -->
-                        <div class="p-4 rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-app);" onclick="openModal('App 1-1')">
-                            <h5 class="text-lg font-bold">App 1</h5>
-                            <p class="text-xs mt-1 opacity-70">사용자 경험 디자인</p>
-                        </div>
-                        <div class="p-4 rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-app);" onclick="openModal('App 1-2')">
-                            <h5 class="text-lg font-bold">App 1</h5>
-                            <p class="text-xs mt-1 opacity-70">새로운 기능 기획</p>
-                        </div>
-                        <div class="p-4 rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-app);" onclick="openModal('App 1-3')">
-                            <h5 class="text-lg font-bold">App 1</h5>
-                            <p class="text-xs mt-1 opacity-70">스타트업 MVP</p>
-                        </div>
-                        <div class="p-4 rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-app);" onclick="openModal('App 1-4')">
-                            <h5 class="text-lg font-bold">App 1</h5>
-                            <p class="text-xs mt-1 opacity-70">다크 모드 컨셉</p>
-                        </div>
-                        <div class="p-4 rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-app);" onclick="openModal('App 1-5')">
-                            <h5 class="text-lg font-bold">App 1</h5>
-                            <p class="text-xs mt-1 opacity-70">앱 스토어 썸네일</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-10">
-                    <h4 class="text-xl font-bold mb-4">마케팅 배너 추천</h4>
-                    <!-- 마케팅 배너 세로 형식 (h-64) 구현 및 내용 수직 정렬을 위해 flex 사용 -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <!-- 5 Marketing Banner Thumbnails -->
-                        <div class="p-4 h-64 flex flex-col justify-between rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-marketing);" onclick="openModal('Marketing 1-1')">
-                            <div>
-                                <h5 class="text-lg font-bold">Marketing 1</h5>
-                                <p class="text-xs mt-1 opacity-70">소셜 미디어 광고</p>
-                            </div>
-                            <div class="text-xs opacity-50 self-end">세로 배너</div> 
-                        </div>
-                        <div class="p-4 h-64 flex flex-col justify-between rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-marketing);" onclick="openModal('Marketing 1-2')">
-                            <div>
-                                <h5 class="text-lg font-bold">Marketing 1</h5>
-                                <p class="text-xs mt-1 opacity-70">이메일 뉴스레터</p>
-                            </div>
-                            <div class="text-xs opacity-50 self-end">세로 배너</div> 
-                        </div>
-                        <div class="p-4 h-64 flex flex-col justify-between rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-marketing);" onclick="openModal('Marketing 1-3')">
-                            <div>
-                                <h5 class="text-lg font-bold">Marketing 1</h5>
-                                <p class="text-xs mt-1 opacity-70">유튜브 썸네일</p>
-                            </div>
-                            <div class="text-xs opacity-50 self-end">세로 배너</div> 
-                        </div>
-                        <div class="p-4 h-64 flex flex-col justify-between rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-marketing);" onclick="openModal('Marketing 1-4')">
-                            <div>
-                                <h5 class="text-lg font-bold">Marketing 1</h5>
-                                <p class="text-xs mt-1 opacity-70">신제품 프로모션</p>
-                            </div>
-                            <div class="text-xs opacity-50 self-end">세로 배너</div> 
-                        </div>
-                        <div class="p-4 h-64 flex flex-col justify-between rounded-xl cursor-pointer hover:opacity-80 transition duration-200" style="background-color: var(--color-marketing);" onclick="openModal('Marketing 1-5')">
-                            <div>
-                                <h5 class="text-lg font-bold">Marketing 1</h5>
-                                <p class="text-xs mt-1 opacity-70">리타겟팅 캠페인</p>
-                            </div>
-                            <div class="text-xs opacity-50 self-end">세로 배너</div> 
-                        </div>
-                    </div>
+                <div id="noResultsMsg" class="hidden text-center py-20 bg-gray-900/50 rounded-xl border border-dashed border-gray-700">
+                    <p class="text-xl text-gray-400 mb-2">조건에 맞는 작품이 없습니다.</p>
+                    <button onclick="resetFilters()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white transition">필터 초기화</button>
                 </div>
             </section>
 
-            <!-- Divider -->
-            <div class="border-t border-gray-800 my-10"></div>
-
-            <!-- 4. Theme Collection Section (테마별 컬렉션) -->
-            <section class="mb-20">
-                <h2 class="text-3xl md:text-4xl font-bold mb-2">테마별 컬렉션</h2>
-                <p class="text-lg text-gray-400 mb-8">
-                    다양한 테마로 구성된 컬렉션을 탐색하며 새로운 영감을 얻어보세요
-                </p>
-
-                <div class="space-y-12">
-                    
-                    <!-- Real-time Popular Works - 썸네일 3개, 가로 폭 넓게 조정 (lg:grid-cols-3) -->
-                    <div>
-                        <h3 class="text-2xl font-semibold mb-4 text-orange-400">실시간 인기 작품</h3>
-                        <!-- Grid: 모바일 1, 태블릿 2, 데스크톱 3 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- 작품 A -->
-                            <div class="cursor-pointer transition duration-200 hover:opacity-80" onclick="openModal('인기 작품 A (도시의 야경)')">
-                                <div class="aspect-square rounded-lg mb-2 overflow-hidden">
-                                    <img src="https://placehold.co/400x400/9a3412/ffffff" alt="인기 작품 A" class="w-full h-full object-cover">
-                                </div>
-                                <h4 class="text-lg font-bold truncate">도시의 야경</h4>
-                                <div class="flex justify-between items-center text-sm text-gray-400">
-                                    <span class="text-xs">작가: 김작가</span>
-                                    <span class="font-bold text-yellow-400">300C</span>
-                                </div>
-                            </div>
-                            <!-- 작품 B -->
-                            <div class="cursor-pointer transition duration-200 hover:opacity-80" onclick="openModal('인기 작품 B (몽환적인 바다)')">
-                                <div class="aspect-square rounded-lg mb-2 overflow-hidden">
-                                    <img src="https://placehold.co/400x400/9d174d/ffffff" alt="인기 작품 B" class="w-full h-full object-cover">
-                                </div>
-                                <h4 class="text-lg font-bold truncate">몽환적인 바다</h4>
-                                <div class="flex justify-between items-center text-sm text-gray-400">
-                                    <span class="text-xs">작가: 이작가</span>
-                                    <span class="font-bold text-yellow-400">550C</span>
-                                </div>
-                            </div>
-                            <!-- 작품 C -->
-                            <div class="cursor-pointer transition duration-200 hover:opacity-80" onclick="openModal('인기 작품 C (사이버펑크 빌딩)')">
-                                <div class="aspect-square rounded-lg mb-2 overflow-hidden">
-                                    <img src="https://placehold.co/400x400/1e40af/ffffff" alt="인기 작품 C" class="w-full h-full object-cover">
-                                </div>
-                                <h4 class="text-lg font-bold truncate">사이버펑크 빌딩</h4>
-                                <div class="flex justify-between items-center text-sm text-gray-400">
-                                    <span class="text-xs">작가: 박작가</span>
-                                    <span class="font-bold text-yellow-400">720C</span>
-                                </div>
-                            </div>
+            <div id="defaultContent">
+                <section class="mb-20">
+                    <div class="flex items-baseline justify-start space-x-4 mb-4">
+                        <span class="text-2xl md:text-3xl font-bold text-white">금주의 추천 작품</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-6 rounded-xl cursor-pointer hover:ring-2 hover:ring-white transition shadow-lg" style="background-color: #38761d;" onclick="openModalDetails(1)">
+                            <span class="text-xs font-semibold bg-yellow-300 text-gray-900 px-2 py-0.5 rounded-full mb-2 inline-block">NEW</span>
+                            <h3 class="text-3xl font-bold mb-1">몽상의 숲</h3>
+                            <p class="text-sm opacity-80 mb-4">자연과 AI의 조화</p>
+                        </div>
+                        <div class="p-6 rounded-xl cursor-pointer hover:ring-2 hover:ring-white transition shadow-lg" style="background-color: #674ea7;" onclick="openModalDetails(2)">
+                            <h3 class="text-3xl font-bold mb-1">도시적 디자이너</h3>
+                            <p class="text-sm opacity-80 mb-4">모던 UI/UX</p>
+                        </div>
+                        <div class="p-6 rounded-xl cursor-pointer hover:ring-2 hover:ring-white transition shadow-lg" style="background-color: #1c4587;" onclick="openModalDetails(3)">
+                            <h3 class="text-3xl font-bold mb-1">미래 건축</h3>
+                            <p class="text-sm opacity-80 mb-4">3D 렌더링</p>
                         </div>
                     </div>
-
-                    <!-- Recommended Popular Authors - 작가 3명, 가로 폭 넓게 조정, 정보 배치 변경 -->
-                    <div>
-                        <h3 class="text-2xl font-semibold mb-4 text-pink-400">인기 작가 추천</h3>
-                        <!-- Grid: 모바일 1, 태블릿 2, 데스크톱 3 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            
-                            <!-- 작가 A -->
-                            <div class="cursor-pointer transition duration-200 hover:opacity-90" onclick="openModal('작가 A')">
-                                <!-- 썸네일 (프로필 이미지) + 키워드 해시태그 (하단) -->
-                                <div class="relative aspect-square rounded-xl mb-3 overflow-hidden bg-gray-800 p-4 flex items-end justify-center">
-                                    <img src="https://placehold.co/150x150/52525b/ffffff?text=A" alt="작가 프로필" class="w-32 h-32 rounded-full object-cover border-4 border-gray-700">
-                                    <div class="absolute bottom-3 left-0 right-0 flex flex-wrap justify-center gap-1">
-                                        <span class="text-xs bg-gray-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-pink-300">#컨셉아트</span>
-                                        <span class="text-xs bg-gray-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-pink-300">#웹툰배경</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- 썸네일 밖 하단 배치 정보 -->
-                                <div class="text-left mt-2">
-                                    <h4 class="text-lg font-bold mb-1">작가 A</h4>
-                                    <p class="text-xs text-gray-400 line-clamp-2">컨셉 아트, 웹툰 배경 등 다양한 작품 활동을 하며 독자들에게 새로운 영감을 줍니다.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- 작가 B -->
-                            <div class="cursor-pointer transition duration-200 hover:opacity-90" onclick="openModal('작가 B')">
-                                 <!-- 썸네일 (프로필 이미지) + 키워드 해시태그 (하단) -->
-                                <div class="relative aspect-square rounded-xl mb-3 overflow-hidden bg-gray-800 p-4 flex items-end justify-center">
-                                    <img src="https://placehold.co/150x150/52525b/ffffff?text=B" alt="작가 프로필" class="w-32 h-32 rounded-full object-cover border-4 border-gray-700">
-                                    <div class="absolute bottom-3 left-0 right-0 flex flex-wrap justify-center gap-1">
-                                        <span class="text-xs bg-gray-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-pink-300">#몽환</span>
-                                        <span class="text-xs bg-gray-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-pink-300">#일러스트</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- 썸네일 밖 하단 배치 정보 -->
-                                <div class="text-left mt-2">
-                                    <h4 class="text-lg font-bold mb-1">작가 B</h4>
-                                    <p class="text-xs text-gray-400 line-clamp-2">몽환적인 분위기의 일러스트레이션 전문 작가로 감성적인 터치가 돋보입니다.</p>
-                                </div>
-                            </div>
-
-                            <!-- 작가 C -->
-                            <div class="cursor-pointer transition duration-200 hover:opacity-90" onclick="openModal('작가 C')">
-                                <!-- 썸네일 (프로필 이미지) + 키워드 해시태그 (하단) -->
-                                <div class="relative aspect-square rounded-xl mb-3 overflow-hidden bg-gray-800 p-4 flex items-end justify-center">
-                                    <img src="https://placehold.co/150x150/52525b/ffffff?text=C" alt="작가 프로필" class="w-32 h-32 rounded-full object-cover border-4 border-gray-700">
-                                    <div class="absolute bottom-3 left-0 right-0 flex flex-wrap justify-center gap-1">
-                                        <span class="text-xs bg-gray-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-pink-300">#SF</span>
-                                        <span class="text-xs bg-gray-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-pink-300">#미래건축</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- 썸네일 밖 하단 배치 정보 -->
-                                <div class="text-left mt-2">
-                                    <h4 class="text-lg font-bold mb-1">작가 C</h4>
-                                    <p class="text-xs text-gray-400 line-clamp-2">SF, 미래 건축 등 하드 서페이스 아트에 능통하며 독창적인 세계관을 구축합니다.</p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-            </section>
+                </section>
+            </div>
 
         </main>
 
-        <!-- Footer for completeness -->
-        <footer class="bg-gray-900/90 border-t border-gray-800 mt-12 py-8">
-            <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
-                &copy; 2025 creAI-tive Art Marketplace Prototype. All rights reserved.
-            </div>
+        <footer class="bg-gray-900/90 border-t border-gray-800 mt-12 py-8 text-center text-sm text-gray-500">
+            &copy; 2025 creAI-tive Art Marketplace. All rights reserved.
         </footer>
+    </div>
 
-    </div> <!-- End of content-overlay -->
+    <div id="toastMessage" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 translate-y-10 z-[2000] border border-gray-600">
+        <div class="bg-green-500 rounded-full p-1">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <span id="toastText" class="font-medium text-sm">알림 메시지</span>
+    </div>
 
     <script>
-        /**
-         * 작품 상세 페이지 모달을 띄우는 함수입니다.
-         * 실제 프로토타입 뎁스(탐색 -> 거래하기 -> 작품 상세페이지)를 시뮬레이션합니다.
-         * @param {string} artworkName 클릭된 작품/작가 이름 또는 검색어
-         */
-        function openModal(artworkName) {
-            const modal = document.getElementById('artworkDetailModal');
-            const modalTitle = modal.querySelector('h2');
+    /* [1] 가상 데이터베이스 (Mock Data - 40개) */
+    const artworkData = [
+        { id: 1, title: "몽상의 숲", author: "AI Art Lab", tags: ["자연", "풍경화", "트렌디"], category: "이미지 생성", price: "150C", priceValue: 150, date: "2024-11-01", views: 1200, color: "#38761d", liked: false },
+        { id: 2, title: "도시적 디자이너", author: "Creative Soul", tags: ["모던", "앱", "미니멀"], category: "어플 디자인", price: "300C", priceValue: 300, date: "2024-10-25", views: 850, color: "#674ea7", liked: false },
+        { id: 3, title: "미래 건축", author: "Future Build", tags: ["SF", "건축", "3D"], category: "마케팅 배너", price: "200C", priceValue: 200, date: "2024-11-10", views: 2100, color: "#1c4587", liked: true },
+        { id: 4, title: "사용자 경험", author: "UX Master", tags: ["UX", "앱", "기획"], category: "어플 디자인", price: "100C", priceValue: 100, date: "2024-09-15", views: 500, color: "#783f04", liked: false },
+        { id: 5, title: "SNS 광고 배너", author: "Marketing Pro", tags: ["광고", "SNS", "트렌디"], category: "마케팅 배너", price: "80C", priceValue: 80, date: "2024-11-20", views: 3000, color: "#cc0000", liked: false },
+        { id: 6, title: "도시의 야경", author: "김작가", tags: ["야경", "풍경화", "감성"], category: "일러스트", price: "300C", priceValue: 300, date: "2024-10-05", views: 400, color: "#9a3412", liked: false },
+        { id: 7, title: "몽환적인 바다", author: "이작가", tags: ["바다", "몽환", "추상"], category: "일러스트", price: "550C", priceValue: 550, date: "2024-08-30", views: 1500, color: "#9d174d", liked: false },
+        { id: 8, title: "사이버펑크 빌딩", author: "박작가", tags: ["SF", "사이버펑크", "컨셉아트"], category: "컨셉아트", price: "720C", priceValue: 720, date: "2024-11-25", views: 200, color: "#1e40af", liked: false },
+        { id: 9, title: "미니멀 아이콘", author: "Simplicity", tags: ["미니멀", "아이콘", "UI"], category: "어플 디자인", price: "50C", priceValue: 50, date: "2024-11-15", views: 900, color: "#4b5563", liked: false },
+        { id: 10, title: "추상적 감정", author: "Artistic Mind", tags: ["추상", "예술", "감정"], category: "이미지 생성", price: "400C", priceValue: 400, date: "2024-07-20", views: 600, color: "#0f766e", liked: false },
+        { id: 11, title: "네온 사인", author: "Night Walker", tags: ["네온", "밤", "힙한"], category: "일러스트", price: "120C", priceValue: 120, date: "2024-11-22", views: 1100, color: "#be185d", liked: false },
+        { id: 12, title: "레트로 게임", author: "Pixel Artist", tags: ["레트로", "픽셀", "게임"], category: "컨셉아트", price: "90C", priceValue: 90, date: "2024-10-10", views: 3200, color: "#059669", liked: false },
+        { id: 13, title: "화성 거주지", author: "Space X", tags: ["우주", "SF", "배경"], category: "컨셉아트", price: "600C", priceValue: 600, date: "2024-11-18", views: 150, color: "#c2410c", liked: false },
+        { id: 14, title: "랜딩 페이지", author: "Web Guru", tags: ["웹", "UI", "비즈니스"], category: "어플 디자인", price: "250C", priceValue: 250, date: "2024-09-01", views: 700, color: "#374151", liked: false },
+        { id: 15, title: "가을 풍경", author: "Season Art", tags: ["가을", "자연", "풍경화"], category: "이미지 생성", price: "180C", priceValue: 180, date: "2024-10-15", views: 550, color: "#b45309", liked: false },
+        { id: 16, title: "할로윈 파티", author: "Event Master", tags: ["할로윈", "이벤트", "배너"], category: "마케팅 배너", price: "50C", priceValue: 50, date: "2024-10-30", views: 4000, color: "#7c2d12", liked: false },
+        { id: 17, title: "겨울 왕국", author: "Snow Man", tags: ["겨울", "눈", "판타지"], category: "일러스트", price: "330C", priceValue: 330, date: "2024-11-28", views: 2200, color: "#0ea5e9", liked: false },
+        { id: 18, title: "AI 로봇", author: "Tech Lab", tags: ["로봇", "AI", "미래"], category: "이미지 생성", price: "450C", priceValue: 450, date: "2024-08-05", views: 900, color: "#475569", liked: false },
+        { id: 19, title: "모바일 뱅킹", author: "FinTech", tags: ["금융", "앱", "UI"], category: "어플 디자인", price: "500C", priceValue: 500, date: "2024-11-05", views: 300, color: "#1e3a8a", liked: false },
+        { id: 20, title: "블랙 프라이데이", author: "Sale King", tags: ["세일", "광고", "배너"], category: "마케팅 배너", price: "40C", priceValue: 40, date: "2024-11-25", views: 5000, color: "#000000", liked: false },
+        { id: 21, title: "숲속의 오두막", author: "Nature Lover", tags: ["힐링", "숲", "동화"], category: "일러스트", price: "220C", priceValue: 220, date: "2024-09-20", views: 1300, color: "#166534", liked: false },
+        { id: 22, title: "고양이 초상화", author: "Cat Mom", tags: ["동물", "고양이", "귀여운"], category: "이미지 생성", price: "110C", priceValue: 110, date: "2024-11-12", views: 2500, color: "#f59e0b", liked: false },
+        { id: 23, title: "대시보드 UI", author: "Admin Pro", tags: ["관리자", "웹", "데이터"], category: "어플 디자인", price: "350C", priceValue: 350, date: "2024-10-01", views: 600, color: "#312e81", liked: false },
+        { id: 24, title: "신년 인사", author: "Card Maker", tags: ["새해", "카드", "전통"], category: "마케팅 배너", price: "60C", priceValue: 60, date: "2024-12-01", views: 800, color: "#9f1239", liked: false },
+        { id: 25, title: "수중 도시", author: "Deep Sea", tags: ["물", "SF", "판타지"], category: "컨셉아트", price: "650C", priceValue: 650, date: "2024-07-15", views: 180, color: "#0891b2", liked: false },
+        { id: 26, title: "빈티지 카페", author: "Coffee Love", tags: ["카페", "빈티지", "감성"], category: "일러스트", price: "190C", priceValue: 190, date: "2024-10-22", views: 1400, color: "#78350f", liked: false },
+        { id: 27, title: "운동 앱 UI", author: "Health Care", tags: ["운동", "건강", "앱"], category: "어플 디자인", price: "280C", priceValue: 280, date: "2024-11-08", views: 950, color: "#15803d", liked: false },
+        { id: 28, title: "봄의 정원", author: "Flower Art", tags: ["봄", "꽃", "화사한"], category: "이미지 생성", price: "160C", priceValue: 160, date: "2024-04-10", views: 2000, color: "#db2777", liked: false },
+        { id: 29, title: "판타지 드래곤", author: "Dragon Lord", tags: ["판타지", "몬스터", "용"], category: "컨셉아트", price: "800C", priceValue: 800, date: "2024-11-29", views: 50, color: "#4c1d95", liked: false },
+        { id: 30, title: "유튜브 인트로", author: "Video Star", tags: ["유튜브", "영상", "썸네일"], category: "마케팅 배너", price: "70C", priceValue: 70, date: "2024-11-15", views: 3500, color: "#b91c1c", liked: false },
+    ];
+
+    // [전역 상태 변수]
+    let currentKeyword = "";
+    let showLikedOnly = false;
+    let currentPage = 1;
+    const itemsPerPage = 8;
+    let currentFilteredData = [];
+    
+    // 장바구니 및 모달 상태
+    let cart = []; 
+    let currentOpenedItemId = null; 
+    
+    // 최근 검색어 상태
+    let recentSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
+    
+    // 필터 적용 타임아웃 변수 (디바운싱 & 딜레이)
+    let filterTimeout = null;
+
+    /* 검색 실행 함수 */
+    function executeSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const query = searchInput.value.trim();
+        
+        if (!query) {
+            alert("검색어를 입력해주세요.");
+            return;
+        }
+
+        saveRecentSearch(query);
+        
+        currentKeyword = query.toLowerCase();
+        
+        const defaultContent = document.getElementById('defaultContent');
+        const searchResultsSection = document.getElementById('searchResultsSection');
+        if (defaultContent) defaultContent.classList.add('hidden');
+        if (searchResultsSection) searchResultsSection.classList.remove('hidden');
+        
+        const querySpan = document.getElementById('currentQuery');
+        if (querySpan) querySpan.textContent = query;
+
+        resetFilterValues();
+        applyFilters();
+
+        document.getElementById('recentSearchDropdown').classList.add('hidden');
+    }
+
+    /* 최근 검색어 저장 */
+    function saveRecentSearch(keyword) {
+        recentSearches = recentSearches.filter(item => item !== keyword);
+        recentSearches.unshift(keyword);
+        if (recentSearches.length > 3) recentSearches.pop();
+        localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+    }
+
+    /* 최근 검색어 표시 */
+    function showRecentSearches() {
+        const dropdown = document.getElementById('recentSearchDropdown');
+        const list = document.getElementById('recentSearchList');
+        
+        if (recentSearches.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        list.innerHTML = recentSearches.map(keyword => `
+            <li class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 text-gray-300 hover:text-white transition flex justify-between items-center group"
+                onclick="searchKeyword('${keyword}')">
+                <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-gray-500 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>${keyword}</span>
+                </div>
+                <span class="text-xs text-gray-600 group-hover:text-gray-400">검색</span>
+            </li>
+        `).join('');
+
+        dropdown.classList.remove('hidden');
+    }
+
+    function hideRecentSearchesWithDelay() {
+        setTimeout(() => {
+            document.getElementById('recentSearchDropdown').classList.add('hidden');
+        }, 200);
+    }
+
+    function clearRecentSearches() {
+        recentSearches = [];
+        localStorage.removeItem('recentSearches');
+        document.getElementById('recentSearchDropdown').classList.add('hidden');
+    }
+
+    /* 태그 클릭 검색 */
+    function searchKeyword(keyword) {
+        const searchInput = document.getElementById('searchInput');
+        const cleanKeyword = keyword.replace('#', '');
+        if (searchInput) {
+            searchInput.value = cleanKeyword;
+            executeSearch();
+        }
+    }
+
+    /* 통합 필터링 로직 (스켈레톤 로딩 포함) */
+    function applyFilters() {
+        if (filterTimeout) clearTimeout(filterTimeout);
+
+        renderSkeleton();
+
+        filterTimeout = setTimeout(() => {
+            performFiltering();
+        }, 500);
+    }
+
+    /* 실제 데이터 필터링 및 렌더링 */
+    function performFiltering() {
+        currentPage = 1;
+        const categoryFilter = document.getElementById('filterCategory')?.value || 'all';
+        const priceFilter = document.getElementById('filterPrice')?.value || 'all';
+        const sortOrder = document.getElementById('sortOrder')?.value || 'relevance';
+
+        let filtered = artworkData.filter(item => {
+            const matchQuery = item.title.toLowerCase().includes(currentKeyword) || 
+                               item.author.toLowerCase().includes(currentKeyword) ||
+                               item.tags.some(tag => tag.toLowerCase().includes(currentKeyword));
+            const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
             
-            // 모달 내용 업데이트
-            if (artworkName) {
-                // 키워드 검색 결과일 경우 제목을 다르게 설정
-                if (artworkName.startsWith('키워드 검색 결과:')) {
-                     modalTitle.textContent = `${artworkName} (작품 나열 시뮬레이션)`;
-                } else {
-                     modalTitle.textContent = `${artworkName} 작품 상세 페이지 (프로토타입)`;
-                }
-            } else {
-                modalTitle.textContent = '작품 상세 페이지 (프로토타입)';
-            }
+            let matchPrice = true;
+            if (priceFilter === 'free') matchPrice = item.priceValue === 0;
+            else if (priceFilter === 'low') matchPrice = item.priceValue > 0 && item.priceValue <= 100;
+            else if (priceFilter === 'mid') matchPrice = item.priceValue > 100 && item.priceValue <= 300;
+            else if (priceFilter === 'high') matchPrice = item.priceValue > 300;
             
-            modal.style.display = 'flex'; // 모달 표시
-            document.body.style.overflow = 'hidden'; // 스크롤 잠금
-        }
+            const matchLiked = showLikedOnly ? item.liked : true;
 
-        /**
-         * 검색 버튼 클릭 시 동작하는 함수입니다.
-         * 특정 키워드 입력 시 작품 상세 페이지 모달을 띄웁니다.
-         */
-        function handleSearch() {
-            const searchInput = document.getElementById('searchInput');
-            const query = searchInput.value.trim();
-            const keywords = ['트렌디', '미니멀', '추상', '풍경화', '컨셉아트'];
-
-            if (keywords.includes(query)) {
-                // 키워드가 일치하면 모달을 띄웁니다.
-                openModal(`키워드 검색 결과: ${query}`);
-            } else if (query !== '') {
-                // 다른 키워드일 경우에도 검색바 동작 시뮬레이션을 위해 모달을 띄웁니다.
-                openModal(`'${query}'에 대한 검색 결과 (작품 나열 시뮬레이션)`);
-            }
-            // 검색창을 비웁니다.
-            searchInput.value = '';
-        }
-
-        /**
-         * 작품 상세 페이지 모달을 닫는 함수입니다.
-         */
-        function closeModal() {
-            document.getElementById('artworkDetailModal').style.display = 'none'; // 모달 숨김
-            document.body.style.overflow = ''; // 스크롤 잠금 해제
-        }
-
-        // 모달 외부 클릭 시 닫기
-        document.getElementById('artworkDetailModal').addEventListener('click', (e) => {
-            if (e.target.id === 'artworkDetailModal') {
-                closeModal();
-            }
+            return matchQuery && matchCategory && matchPrice && matchLiked;
         });
+
+        if (sortOrder === 'latest') {
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+        } else if (sortOrder === 'popular') {
+            filtered.sort((a, b) => b.views - a.views);
+        } else if (sortOrder === 'price_asc') {
+            filtered.sort((a, b) => a.priceValue - b.priceValue);
+        }
+
+        currentFilteredData = filtered;
+        renderResults();
+        updateLikedButtonUI();
+    }
+
+    /* 스켈레톤 UI 그리기 */
+    function renderSkeleton() {
+        const resultsGrid = document.getElementById('resultsGrid');
+        const resultCount = document.getElementById('resultCount');
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+
+        if(resultCount) resultCount.innerText = "(로딩중...)";
+        if(loadMoreContainer) loadMoreContainer.classList.add('hidden');
+        if(noResultsMsg) noResultsMsg.classList.add('hidden');
+
+        let skeletonHTML = '';
+        for (let i = 0; i < 8; i++) {
+            skeletonHTML += `
+                <div class="rounded-xl overflow-hidden bg-gray-800 border border-gray-700 animate-pulse">
+                    <div class="h-48 bg-gray-700/50"></div> 
+                    <div class="p-6 space-y-3">
+                        <div class="h-6 bg-gray-700/50 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-700/50 rounded w-1/2"></div>
+                    </div>
+                    <div class="p-4 border-t border-gray-700 flex justify-between items-center">
+                        <div class="flex space-x-2">
+                            <div class="h-4 w-10 bg-gray-700/50 rounded"></div>
+                            <div class="h-4 w-10 bg-gray-700/50 rounded"></div>
+                        </div>
+                        <div class="h-5 w-12 bg-gray-700/50 rounded"></div>
+                    </div>
+                </div>
+            `;
+        }
+        resultsGrid.innerHTML = skeletonHTML;
+    }
+
+
+    /* 화면 렌더링 (페이지네이션) */
+    function renderResults() {
+        const resultsGrid = document.getElementById('resultsGrid');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        const resultCount = document.getElementById('resultCount');
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        const displayedCountSpan = document.getElementById('displayedCount');
+        const totalCountSpan = document.getElementById('totalCount');
+
+        if (!resultsGrid) return;
+
+        if (resultCount) resultCount.textContent = `(${currentFilteredData.length}건)`;
+        
+        if (currentFilteredData.length === 0) {
+            resultsGrid.innerHTML = '';
+            if (noResultsMsg) noResultsMsg.classList.remove('hidden');
+            if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
+            return;
+        }
+
+        if (noResultsMsg) noResultsMsg.classList.add('hidden');
+
+        const itemsToShow = currentFilteredData.slice(0, currentPage * itemsPerPage);
+        
+        resultsGrid.innerHTML = itemsToShow.map(item => createCardHTML(item)).join('');
+
+        if (itemsToShow.length < currentFilteredData.length) {
+            loadMoreContainer.classList.remove('hidden');
+            displayedCountSpan.textContent = itemsToShow.length;
+            totalCountSpan.textContent = currentFilteredData.length;
+        } else {
+            loadMoreContainer.classList.add('hidden');
+        }
+    }
+
+    function loadMoreItems() {
+        currentPage++;
+        renderResults();
+    }
+
+    /* 카드 생성 헬퍼 */
+    function createCardHTML(item) {
+        const bgStyle = item.color ? `background-color: ${item.color};` : '';
+        const heartClass = item.liked ? "text-red-500 fill-current" : "text-white hover:text-red-400";
+        const isNewItem = isNew(item.date);
+
+        return `
+            <div class="group relative rounded-xl overflow-hidden cursor-pointer transition duration-300 hover:shadow-2xl bg-gray-800 border border-gray-700 hover:border-gray-500 fade-in">
+                <div class="h-48 relative p-6 flex flex-col justify-between" style="${bgStyle}" onclick="openModalDetails(${item.id})">
+                    <div class="flex justify-between items-start z-10">
+                        <span class="text-xs bg-black/40 text-white px-2 py-1 rounded backdrop-blur-sm border border-white/10 shadow-sm">${item.category}</span>
+                        ${isNewItem ? '<span class="text-xs font-bold bg-yellow-400 text-black px-2 py-0.5 rounded-full shadow-lg">NEW</span>' : ''}
+                    </div>
+                    <div class="z-10">
+                        <h3 class="text-xl font-bold text-white drop-shadow-md group-hover:scale-105 transition-transform origin-left">${item.title}</h3>
+                        <p class="text-xs text-white/90 font-light drop-shadow">${item.author}</p>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70"></div>
+                </div>
+                
+                <button onclick="toggleLike(event, ${item.id})" class="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-white/20 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ${heartClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                </button>
+
+                <div class="p-4 bg-gray-900 border-t border-gray-700 flex justify-between items-center" onclick="openModalDetails(${item.id})">
+                    <div class="flex space-x-1 overflow-hidden">
+                        ${item.tags.slice(0, 2).map(tag => `<span class="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded">#${tag}</span>`).join('')}
+                    </div>
+                    <span class="text-orange-400 font-bold text-lg">${item.price}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    /* 찜하기 토글 */
+    function toggleLike(event, id) {
+        event.stopPropagation();
+        const item = artworkData.find(d => d.id === id);
+        if (item) {
+            item.liked = !item.liked;
+            if (item.liked) showToast(`'${item.title}' 찜 완료! ❤️`);
+            else showToast(`찜 삭제 완료.`);
+            performFiltering();
+        }
+    }
+
+    function toggleLikedFilter() {
+        showLikedOnly = !showLikedOnly;
+        applyFilters(); 
+    }
+
+    function updateLikedButtonUI() {
+        const btn = document.getElementById('btnToggleLike');
+        if (btn) {
+            if (showLikedOnly) {
+                btn.classList.add('bg-red-900/30', 'border-red-500', 'text-white');
+                btn.classList.remove('bg-gray-900', 'border-gray-600', 'text-gray-400');
+            } else {
+                btn.classList.remove('bg-red-900/30', 'border-red-500', 'text-white');
+                btn.classList.add('bg-gray-900', 'border-gray-600', 'text-gray-400');
+            }
+        }
+    }
+
+    /* 장바구니 기능 */
+    function addToCartCurrentItem() {
+        if (!currentOpenedItemId) return;
+        if (cart.includes(currentOpenedItemId)) {
+            showToast("이미 장바구니에 담긴 작품입니다.");
+            return;
+        }
+        cart.push(currentOpenedItemId);
+        updateCartCount();
+        const item = artworkData.find(d => d.id === currentOpenedItemId);
+        if(item) showToast(`🛒 '${item.title}' 장바구니에 담김!`);
+    }
+
+    function updateCartCount() {
+        const badge = document.getElementById('cartCountBadge');
+        if (badge) {
+            badge.innerText = cart.length;
+            if (cart.length > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+    }
+
+    /* 모달 기능 */
+    function openModalDetails(id) {
+        const item = artworkData.find(d => d.id === id);
+        if (!item) return;
+
+        currentOpenedItemId = item.id;
+
+        const modal = document.getElementById('artworkDetailModal');
+        if (modal) {
+            document.getElementById('modalArtworkTitle').textContent = item.title;
+            document.getElementById('modalAuthor').textContent = item.author;
+            document.getElementById('modalCategory').textContent = item.category;
+            document.getElementById('modalPrice').textContent = item.price;
+            
+            const imgArea = document.getElementById('modalImageArea');
+            if(imgArea) imgArea.style.backgroundColor = item.color;
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('artworkDetailModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            currentOpenedItemId = null;
+        }
+    }
+
+    /* 유틸리티 */
+    function showToast(message) {
+        const toast = document.getElementById('toastMessage');
+        const toastText = document.getElementById('toastText');
+        if (toast && toastText) {
+            toastText.textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-10');
+            }, 3000);
+        }
+    }
+
+    function resetFilterValues() {
+        const catFilter = document.getElementById('filterCategory');
+        const priceFilter = document.getElementById('filterPrice');
+        const sortFilter = document.getElementById('sortOrder');
+        if (catFilter) catFilter.value = 'all';
+        if (priceFilter) priceFilter.value = 'all';
+        if (sortFilter) sortFilter.value = 'relevance';
+        showLikedOnly = false;
+    }
+
+    function resetFilters() {
+        resetFilterValues();
+        applyFilters();
+    }
+
+    function resetSearch(e) {
+        if(e) e.preventDefault();
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = '';
+        document.getElementById('defaultContent').classList.remove('hidden');
+        document.getElementById('searchResultsSection').classList.add('hidden');
+    }
+
+    function isNew(dateString) {
+        const date = new Date(dateString);
+        const now = new Date('2024-11-26');
+        const diffDays = Math.ceil(Math.abs(now - date) / (1000 * 60 * 60 * 24)); 
+        return diffDays <= 30; 
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('artworkDetailModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target.id === 'artworkDetailModal') closeModal();
+            });
+        }
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') executeSearch();
+            });
+        }
+    });
     </script>
 </body>
 </html>

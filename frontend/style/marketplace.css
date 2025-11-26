@@ -1,181 +1,64 @@
-거래하기.css
+/* explore.css와 동일한 기본 변수 및 레이아웃 상속 */
 :root {
     --color-bg-dark: #0a0a0a;
     --color-accent-orange: #ff5722;
-    /* 탐색 페이지에서 사용된 작품 색상 변수 (공유) */
-    --color-art1: #38761d;
-    --color-art2: #674ea7;
-    --color-art3: #1c4587;
-    --color-app: #783f04;
-    --color-marketing: #cc0000;
 }
 
-/* [START: 공유 바디 스타일 가이드 적용] */
 body {
-    font-family: Arial, sans-serif;
-    color: #ccc; /* Global Text Color */
-    line-height: 1.6;
+    font-family: 'Inter', Arial, sans-serif;
+    background-color: black;
+    color: #ccc;
     margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    position: relative;
-    z-index: 1;
     min-height: 100vh;
-    
-    /* 배경 스타일 (CSS 그라데이션 기반의 다크 테마) */
-    background-color: #050510;
-    background-image: 
-        radial-gradient(ellipse at center, rgba(17, 24, 39, 0.9) 0%, rgba(5, 5, 16, 1) 90%);
-    background-attachment: fixed;
+    position: relative;
 }
 
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* 안정적인 외부 우주 이미지 URL을 배경으로 사용 */
-    background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg'); 
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg');
     background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
+    background-position: center;
     opacity: 0.4;
     z-index: -1;
 }
-/* [END: 공유 바디 스타일 가이드 적용] */
 
-
-/* 공유 UI 요소 스타일 */
-.cta-button {
-    background-color: var(--color-accent-orange);
-    transition: all 0.2s;
-}
-.cta-button:hover {
-    background-color: #e64a19;
-    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
-}
-.logo-placeholder {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: white;
-}
-.logo-placeholder .ai {
-    color: var(--color-accent-orange);
-}
-
-/* Modal specific styles (공유) */
-.modal-overlay {
-    display: none; 
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background-color: white;
-    padding: 3rem;
-    border-radius: 12px;
-    max-width: 90%;
-    max-height: 90%;
-    overflow-y: auto;
-    color: #333;
-    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
-    text-align: center;
-}
-
-/* 거래하기 페이지 작품 카드 스타일 */
-.artwork-card-content {
-    padding: 0.75rem; /* p-3 */
-    border-bottom-left-radius: 0.75rem; /* rounded-b-xl */
-    border-bottom-right-radius: 0.75rem; /* rounded-b-xl */
-}
-/* 작품 썸네일 내부 이미지 스타일 */
-.artwork-thumbnail img {
-    /* 로딩 안정성을 위해 이미지가 로컬 폴더에 없더라도 placeholder 색상이 보이도록 배경색 추가 */
-    background-color: #3f3f46; /* gray-700 */
-}
-/* 필터/정렬 컨트롤 스타일 */
-#sortCriteria {
-    transition: border-color 0.2s;
-}
-#sortCriteria:focus {
-    border-color: var(--color-accent-orange);
-    box-shadow: 0 0 0 1px var(--color-accent-orange);
-}
-/* 페이지네이션 버튼 비활성화 시 스타일 */
-#paginationControls button:disabled {
-    cursor: not-allowed;
-    background-color: #4a4a4a;
-    opacity: 0.5;
-}
-
-/* --- 상단바 (Header) 스타일 --- */
+/* 헤더 스타일 (explore와 동일) */
 .main-header {
-    width: 100%;
-    height: 60px; /* 상단바 높이 */
-    background-color: black; /* 배경 검은색 */
-    color: white;
     display: flex;
-    justify-content: space-between; /* 양쪽 끝과 가운데 정렬 */
+    justify-content: space-between;
     align-items: center;
+    height: 60px;
     padding: 0 40px;
-    border-bottom: 1px solid #333; /* 섹션 구분을 위한 얇은 선 */
-    box-sizing: border-box; /* 패딩이 전체 너비에 포함되도록 */
-    position: sticky; /* 상단 고정 (선택 사항) */
+    background-color: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid #333;
+    position: sticky;
     top: 0;
     z-index: 100;
 }
+.header-logo { font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; }
+.header-menu { display: flex; gap: 30px; list-style: none; padding: 0; margin: 0; }
+.header-menu a { color: #ccc; text-decoration: none; transition: 0.2s; }
+.header-menu a:hover, .header-menu a.active { color: white; border-bottom: 2px solid var(--color-accent-orange); }
 
-.header-section {
-    display: flex;
-    align-items: center;
-    height: 100%;
-}
+/* 위젯 */
+.user-profile-widget { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.widget-profile-img { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--color-accent-orange); }
+.widget-info { display: flex; flex-direction: column; }
+.widget-user-name { font-weight: bold; color: white; font-size: 0.9rem; }
+.widget-badge-buyer { font-size: 0.6rem; background: #555; padding: 2px 5px; border-radius: 4px; color: white; }
 
-/* 1. 왼쪽 섹션: 로고 */
-.header-logo {
-    font-size: 1.5em;
-    font-weight: bold;
-    text-decoration: none;
-    color: white;
-}
+/* Footer */
+.main-footer { background-color: rgba(17, 24, 39, 0.9); border-top: 1px solid #1f2937; padding: 2rem 0; margin-top: 3rem; }
 
-/* 2. 가운데 섹션: 메뉴 */
-.header-menu {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 30px; /* 메뉴 간 간격 */
-}
-
-.header-menu a {
-    text-decoration: none;
-    color: #ccc;
-    font-size: 1em;
-    padding: 0 5px;
-    transition: color 0.2s, border-bottom 0.2s;
-}
-
-.header-menu a:hover,
-.header-menu a.active {
-    color: white;
-    border-bottom: 2px solid #FF5900; /* ✨ 포인트 컬러로 현재 페이지 강조 */
-}
-
-/* 3. 오른쪽 섹션: 프로필 위젯 */
-.user-profile-widget {
-    display: flex;
-    align-items: center;
+/* 작품 카드 스타일 */
+.artwork-card {
+    border-radius: 0.75rem;
+    overflow: hidden;
     cursor: pointer;
-    gap: 10px;
+    background-color: #374151;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .login-button {
