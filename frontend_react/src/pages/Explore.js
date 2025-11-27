@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import './Explore.css';
 
 const Explore = () => {
@@ -234,7 +235,7 @@ const Explore = () => {
                         <nav className="hidden md:flex space-x-6">
                             <a href="#" className="text-gray-300 hover:text-white transition">거래하기</a>
                             <button className="text-gray-300 hover:text-white transition">작품 보관함</button>
-                            <button className="text-gray-300 hover:text-white transition">마이스페이스</button>
+                            <Link to="/myspace" className="text-gray-300 hover:text-white transition">마이스페이스</Link>
                             <button className="text-gray-300 hover:text-white transition">설정</button>
                         </nav>
 

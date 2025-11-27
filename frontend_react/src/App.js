@@ -1,12 +1,20 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Explore from './pages/Explore';
+import MySpace from './pages/MySpace';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <Explore />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Explore />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/myspace" element={<MySpace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
