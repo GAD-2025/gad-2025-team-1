@@ -1,0 +1,214 @@
+.myspace-folder-page {
+    font-family: Arial, sans-serif;
+    background-color: black;
+    margin: 0;
+    padding: 0;
+    color: #ccc;
+    overflow-x: hidden;
+    position: relative; /* ✨ 추가: 가상 요소 배치를 위한 기준점 */
+    z-index: 1; /* ✨ 추가: 다른 요소들이 배경 이미지 위에 오도록 */
+}
+
+.myspace-folder-page::before {
+    content: ""; /* 가상 요소는 content 속성이 필수 */
+    position: fixed; /* ✨ 고정 배경: 스크롤해도 움직이지 않음 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/space_background.jpg'); /* ✨ 우주 이미지 경로 설정 */
+    background-size: cover; /* 이미지가 화면을 꽉 채우도록 */
+    background-repeat: no-repeat; /* 이미지 반복 방지 */
+    background-position: center center; /* 이미지가 항상 중앙에 오도록 */
+    opacity: 0.4; /* ✨ 불투명도 40% */
+    z-index: -1; /* ✨ 배경 이미지가 모든 콘텐츠 뒤에 오도록 */
+}
+
+/* --- 상단바 (Header) 스타일 --- */
+.main-header {
+    width: 100%;
+    height: 60px; /* 상단바 높이 */
+    background-color: black; /* 배경 검은색 */
+    color: white;
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝과 가운데 정렬 */
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid #333; /* 섹션 구분을 위한 얇은 선 */
+    box-sizing: border-box; /* 패딩이 전체 너비에 포함되도록 */
+    position: sticky; /* 상단 고정 (선택 사항) */
+    top: 0;
+    z-index: 100;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+/* 1. 왼쪽 섹션: 로고 */
+.header-logo {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+/* 2. 가운데 섹션: 메뉴 */
+.header-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 30px; /* 메뉴 간 간격 */
+}
+
+.header-menu a {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 1em;
+    padding: 0 5px;
+    transition: color 0.2s, border-bottom 0.2s;
+}
+
+.header-menu a:hover,
+.header-menu a.active {
+    color: white;
+    border-bottom: 2px solid #FF5900; /* ✨ 포인트 컬러로 현재 페이지 강조 */
+}
+
+.login-button {
+    /* 기본 링크 스타일 제거 */
+    text-decoration: none;
+    color: white; 
+    
+    /* 버튼처럼 보이도록 스타일링 */
+    background-color: #FF5900; /* 포인트 컬러 사용 */
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    
+    /* 호버 효과 (선택 사항) */
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background-color: #e64c00; /* 약간 어두운 색상 */
+    box-shadow: 0 0 10px rgba(255, 89, 0, 0.5); /* 은은한 발광 효과 */
+}
+
+
+/* --- 아카이빙 페이지 공통 스타일 --- */
+.archive-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* 2. 폴더 경로 표시 스타일 */
+.path-display {
+    padding: 20px 0;
+    font-size: 1.1em;
+    color: #999;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #333;
+    
+    /* ✨ 수정: 텍스트를 가운데 정렬합니다. */
+    text-align: center; 
+}
+
+.path-item {
+    margin: 0 5px;
+}
+
+.path-separator {
+    color: #ffffff;
+    margin: 0 5px;
+}
+
+/* ✨ 현재 폴더에 포인트 컬러 적용 */
+.active-folder {
+    color: #FF5900;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.path-before {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* 3. 작품 그리드 스타일 */
+.artwork-grid {
+    display: grid;
+    /* 한 줄에 3개씩, 같은 간격 */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 30px;
+}
+
+.grid-item {
+    /* 정사각형 모양을 위해 padding-bottom 트릭 사용 */
+    width: 100%;
+    padding-bottom: 100%; 
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    
+    border-radius: 10px; /* ✨ 모서리 약간 둥글림 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333; /* 프레임 테두리 */
+    transition: transform 0.2s;
+}
+
+.grid-item:hover {
+    transform: scale(1.03);
+}
+
+.grid-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 프레임을 꽉 채우도록 */
+    border-radius: 10px; /* 이미지도 모서리 둥글림 */
+}
+
+/* 4. 이미지 확대 모달 스타일 */
+.modal {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    z-index: 200; /* 상단바보다 위에 오도록 */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    /* 모달 외부 영역의 반투명 검은색 오버레이 */
+    background-color: rgba(0, 0, 0, 0.9); 
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    /* 모달 내부 콘텐츠(이미지)를 감싸는 컨테이너 */
+    position: relative;
+    max-width: 80vw; /* 화면 너비의 최대 80% */
+    max-height: 80vh; /* 화면 높이의 최대 80% */
+    box-shadow: 0 0 50px rgba(255, 89, 0, 0.5); /* ✨ 포인트 컬러를 사용한 그림자 */
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+#modalImage {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain; /* 이미지가 잘리지 않고 전체 보이도록 */
+}

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+// ★ 1. Link를 여기서 꼭 불러와야 에러가 안 납니다!
+import { Link } from 'react-router-dom'; 
+import Header from '../components/Header';
 import './MySpace.css';
 
 const MySpace = () => {
     const [userData, setUserData] = useState({
-        name: '김민지',
-        bio: '창작을 좋아하는 열정가득 대학생입니다',
+        name: 'Guest', // 기본값
+        bio: '로그인이 필요합니다.',
         img: '/images/White Cats.jpg'
     });
 
@@ -40,27 +42,25 @@ const MySpace = () => {
     ];
 
     useEffect(() => {
-        // Load saved data from localStorage
-        const savedData = localStorage.getItem('myspaceData');
-        if (savedData) {
-            const data = JSON.parse(savedData);
-            if (data.name) setUserData(prev => ({ ...prev, name: data.name }));
-            if (data.bio) setUserData(prev => ({ ...prev, bio: data.bio }));
-            if (data.img) setUserData(prev => ({ ...prev, img: data.img }));
-            if (data.folders) {
-                setFolders(prev => prev.map((folder, idx) => ({
-                    ...folder,
-                    name: data.folders[idx]?.name || folder.name
-                })));
-            }
-            if (data.orbit && data.orbit.length > 0) {
-                setOrbitArtworks(prev => data.orbit.map((imgSrc, index) => ({
-                    id: index + 1,
-                    img: imgSrc,
-                    link: `/myspace/node?id=${index}`,
-                    orbit: index % 2 === 0 ? 'outer' : 'inner',
-                    orientation: index % 2 === 0 ? 'horizontal' : 'vertical'
-                })));
+        // ★ 2. 로그인 정보 가져오기 (Login.js에서 저장한 currentUser)
+        const storedUser = sessionStorage.getItem('currentUser');
+        
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            // 로그인한 정보로 상태 업데이트
+            setUserData(prev => ({
+                ...prev,
+                name: parsedUser.nickname, // 로그인한 유저의 닉네임
+                bio: parsedUser.bio || '창작을 좋아하는 열정가득 대학생입니다', // 없으면 기본값
+                img: parsedUser.profile_image || '/images/White Cats.jpg'
+            }));
+        } else {
+            // (선택사항) 기존 localStorage 로직 유지
+            const savedData = localStorage.getItem('myspaceData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                if (data.name) setUserData(prev => ({ ...prev, name: data.name }));
+                // ... 기타 데이터 로드
             }
         }
     }, []);
@@ -70,55 +70,29 @@ const MySpace = () => {
 
     return (
         <div className="myspace-page">
-            {/* Background */}
             <div
                 className="myspace-page-background"
                 style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/images/space_background.jpg)` }}
             />
 
-            {/* Header */}
-            <header className="main-header">
-                <div className="header-section header-left">
-                    <Link to="/explore" className="header-logo">
-                        <span style={{ color: '#FF5900' }}>creAItive</span>
-                    </Link>
-                </div>
+            {/* Header 컴포넌트 */}
+            <Header />
 
-                <nav className="header-section header-center">
-                    <ul className="header-menu">
-                        <li><a href="/marketplace">거래하기</a></li>
-                        <li><a href="/archive">작품보관함</a></li>
-                        <li><Link to="/myspace" className="active">마이 스페이스</Link></li>
-                        <li><a href="/setting">설정</a></li>
-                    </ul>
-                </nav>
-
-                <div className="header-section header-right">
-                    <a href="/login" className="login-button">로그인</a>
-                </div>
-            </header>
-
-            {/* Main Content */}
             <main className="myspace-container">
-                {/* Profile Section */}
                 <section className="section-profile">
                     <div className="profile-visual-area">
-                        {/* Neighbor Profiles */}
                         {neighbors.map((neighbor, index) => (
                             <div key={neighbor.id} className={`neighbor-profile neighbor-${index + 1}`}>
                                 <img src={neighbor.img} alt={neighbor.alt} />
                             </div>
                         ))}
 
-                        {/* Main Profile Image */}
                         <div className="profile-image-wrapper">
                             <img
                                 src={userData.img}
                                 alt="프로필 사진"
                                 className="profile-main-image"
                             />
-
-                            {/* Social Orbit */}
                             <div className="social-orbit-container">
                                 {socialLinks.map(social => (
                                     <a
@@ -136,59 +110,56 @@ const MySpace = () => {
                         </div>
                     </div>
 
-                    {/* Profile Info */}
                     <div className="profile-info">
+                        {/* ★ 로그인한 사용자의 이름이 여기에 표시됩니다 */}
                         <h1 className="user-name">
                             {userData.name}
                             <span className="badge-me">me</span>
                         </h1>
                         <p className="user-bio">{userData.bio}</p>
-                        <a href="/myspace/setting">
+                        <Link to="/myspace/setting">
                             <button className="btn-profile-manage">프로필 관리</button>
-                        </a>
+                        </Link>
                     </div>
                 </section>
 
-                {/* Works Section */}
                 <section className="section-works">
                     <p className="section-welcome-message">Welcome to my space</p>
 
-                    {/* Folder Icons */}
                     <div className="folder-icons-container">
                         {folders.map(folder => (
-                            <a key={folder.id} href={folder.link} className="folder-item">
+                            <Link key={folder.id} to={folder.link} className="folder-item">
                                 <div className="folder-icon-circle">
                                     <img src={folder.img} alt={`${folder.name} 폴더`} />
                                 </div>
                                 <span className="folder-name">{folder.name}</span>
-                            </a>
+                            </Link>
                         ))}
                     </div>
 
-                    {/* Artwork Orbit */}
                     <div className="artwork-orbit-area">
                         <div className="orbit orbit-outer">
                             {outerOrbitArtworks.map((artwork, index) => (
-                                <a
+                                <Link
                                     key={artwork.id}
-                                    href={artwork.link}
+                                    to={artwork.link}
                                     className={`artwork-item item-${index + 1} ${artwork.orientation}`}
                                     title={`작품 ${artwork.id}`}
                                 >
                                     <img src={artwork.img} alt={`작품 ${artwork.id}`} />
-                                </a>
+                                </Link>
                             ))}
                         </div>
                         <div className="orbit orbit-inner">
                             {innerOrbitArtworks.map((artwork, index) => (
-                                <a
+                                <Link
                                     key={artwork.id}
-                                    href={artwork.link}
+                                    to={artwork.link}
                                     className={`artwork-item item-${index + 5} ${artwork.orientation}`}
                                     title={`작품 ${artwork.id}`}
                                 >
                                     <img src={artwork.img} alt={`작품 ${artwork.id}`} />
-                                </a>
+                                </Link>
                             ))}
                         </div>
                     </div>

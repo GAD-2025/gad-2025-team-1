@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "cd frontend_react && npm start"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,8 @@
   },
   "homepage": "https://github.com/GAD-2025/gad-2025-team-1#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.15.3"

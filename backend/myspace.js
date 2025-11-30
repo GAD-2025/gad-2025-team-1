@@ -1,68 +1,179 @@
-// script.js (jQuery 사용)
-$(document).ready(function() {
-    const $orbitArea = $('.artwork-orbit-area');
-    const $outerOrbit = $('.orbit-outer');
-    const $innerOrbit = $('.orbit-inner');
-    const $artworks = $('.artwork-item'); // 모든 작품 아이템 선택
+import React, { useState, useEffect } from 'react';
+// ★ 1. Link를 여기서 꼭 불러와야 에러가 안 납니다!
+import { Link } from 'react-router-dom'; 
+import Header from '../components/Header';
+import './MySpace.css';
 
-    let isDragging = false;
-    let startX;
-    let rotationAngle = 0; // 현재 회전 각도
+const MySpace = () => {
+    const [userData, setUserData] = useState({
+        name: 'Guest', // 기본값
+        bio: '로그인이 필요합니다.',
+        img: '/images/White Cats.jpg'
+    });
 
-   // script.js (jQuery 사용)
+    const [folders, setFolders] = useState([
+        { id: 1, name: 'WISH', img: '/images/folder_1.jpg', link: '/myspace/folder' },
+        { id: 2, name: 'My Work', img: '/images/folder_2.jpg', link: '/my-work' },
+        { id: 3, name: 'ART', img: '/images/folder_3.jpg', link: '/art-folder' }
+    ]);
 
-// ... (이전 코드 동일) ...
+    const [orbitArtworks, setOrbitArtworks] = useState([
+        { id: 1, img: '/images/art_5.jpg', link: '/node/1', orbit: 'outer', orientation: 'horizontal' },
+        { id: 2, img: '/images/art_6.jpg', link: '/myspace/node', orbit: 'outer', orientation: 'horizontal' },
+        { id: 3, img: '/images/art_7.jpg', link: '/node/3', orbit: 'outer', orientation: 'horizontal' },
+        { id: 4, img: '/images/art_1.jpg', link: '/node/4', orbit: 'outer', orientation: 'vertical' },
+        { id: 5, img: '/images/art_2.jpg', link: '/node/5', orbit: 'inner', orientation: 'vertical' },
+        { id: 6, img: '/images/art_3.jpg', link: '/node/6', orbit: 'inner', orientation: 'vertical' },
+        { id: 7, img: '/images/art_4.jpg', link: '/node/7', orbit: 'inner', orientation: 'vertical' }
+    ]);
 
-    // 궤도 회전을 위한 회전각 업데이트 함수
-    function updateOrbitRotation() {
-        // 1. 궤도 자체를 회전
-        // 궤도 전체가 회전하며 그 위에 배치된 작품들을 이동시킵니다.
-        $outerOrbit.css('transform', `rotate(${rotationAngle}deg)`);
-        $innerOrbit.css('transform', `rotate(${-rotationAngle * 0.7}deg)`);
+    const neighbors = [
+        { id: 1, img: '/images/friend_1.jpg', alt: '이웃 프로필 1' },
+        { id: 2, img: '/images/friend_2.jpg', alt: '이웃 프로필 2' },
+        { id: 3, img: '/images/friend_3.jpg', alt: '이웃 프로필 3' },
+        { id: 4, img: '/images/friend_4.jpg', alt: '이웃 프로필 4' }
+    ];
 
-        // 2. 작품 아이템 역회전 (작품이 항상 정면을 바라보도록)
-        // CSS에서 이미 작품의 위치는 고정되었으므로, 회전 값만 적용합니다.
+    const socialLinks = [
+        { id: 'insta', href: 'https://instagram.com', icon: 'fab fa-instagram', title: 'Instagram' },
+        { id: 'facebook', href: 'https://facebook.com', icon: 'fab fa-facebook-f', title: 'Facebook' },
+        { id: 'youtube', href: 'https://youtube.com', icon: 'fab fa-youtube', title: 'YouTube' },
+        { id: 'email', href: 'mailto:user@email.com', icon: 'fas fa-envelope', title: 'Email' }
+    ];
 
-        // 바깥 궤도 작품: 궤도의 회전과 반대로 회전
-        $('.orbit-outer .artwork-item').css('transform', `rotate(${-rotationAngle}deg)`);
+    useEffect(() => {
+        // ★ 2. 로그인 정보 가져오기 (Login.js에서 저장한 currentUser)
+        const storedUser = sessionStorage.getItem('currentUser');
         
-        // 안쪽 궤도 작품: 안쪽 궤도의 회전과 반대로 회전 (다시 양수)
-        const innerOrbitRotation = -rotationAngle * 0.7;
-        $('.orbit-inner .artwork-item').css('transform', `rotate(${-innerOrbitRotation}deg)`);
-    }
-
-// ... (이전 코드 동일) ...
-
-    // 1. 마우스 누르기 (드래그 시작)
-    $orbitArea.on('mousedown', function(e) {
-        isDragging = true;
-        startX = e.clientX;
-        $orbitArea.css('cursor', 'grabbing');
-        e.preventDefault();
-    });
-
-    // 2. 마우스 이동 (드래그 중)
-    $(document).on('mousemove', function(e) {
-        if (!isDragging) return;
-
-        const deltaX = e.clientX - startX;
-        const rotationDelta = deltaX * 0.2; // 회전 속도 조절
-
-        rotationAngle += rotationDelta;
-        updateOrbitRotation();
-
-        startX = e.clientX;
-    });
-
-    // 3. 마우스 떼기 (드래그 종료)
-    $(document).on('mouseup', function() {
-        if (isDragging) {
-            isDragging = false;
-            $orbitArea.css('cursor', 'grab');
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            // 로그인한 정보로 상태 업데이트
+            setUserData(prev => ({
+                ...prev,
+                name: parsedUser.nickname, // 로그인한 유저의 닉네임
+                bio: parsedUser.bio || '창작을 좋아하는 열정가득 대학생입니다', // 없으면 기본값
+                img: parsedUser.profile_image || '/images/White Cats.jpg'
+            }));
+        } else {
+            // (선택사항) 기존 localStorage 로직 유지
+            const savedData = localStorage.getItem('myspaceData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                if (data.name) setUserData(prev => ({ ...prev, name: data.name }));
+                // ... 기타 데이터 로드
+            }
         }
-    });
+    }, []);
 
-    // 초기 궤도 회전 설정
-    $orbitArea.css('cursor', 'grab');
-    updateOrbitRotation();
-});
+    const outerOrbitArtworks = orbitArtworks.filter(art => art.orbit === 'outer');
+    const innerOrbitArtworks = orbitArtworks.filter(art => art.orbit === 'inner');
+
+    return (
+        <div className="myspace-page">
+            <div
+                className="myspace-page-background"
+                style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/images/space_background.jpg)` }}
+            />
+
+            {/* Header 컴포넌트 */}
+            <Header />
+
+            <main className="myspace-container">
+                <section className="section-profile">
+                    <div className="profile-visual-area">
+                        {neighbors.map((neighbor, index) => (
+                            <div key={neighbor.id} className={`neighbor-profile neighbor-${index + 1}`}>
+                                <img src={neighbor.img} alt={neighbor.alt} />
+                            </div>
+                        ))}
+
+                        <div className="profile-image-wrapper">
+                            <img
+                                src={userData.img}
+                                alt="프로필 사진"
+                                className="profile-main-image"
+                            />
+                            <div className="social-orbit-container">
+                                {socialLinks.map(social => (
+                                    <a
+                                        key={social.id}
+                                        href={social.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`social-icon social-${social.id}`}
+                                        title={social.title}
+                                    >
+                                        <i className={social.icon}></i>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="profile-info">
+                        {/* ★ 로그인한 사용자의 이름이 여기에 표시됩니다 */}
+                        <h1 className="user-name">
+                            {userData.name}
+                            <span className="badge-me">me</span>
+                        </h1>
+                        <p className="user-bio">{userData.bio}</p>
+                        <Link to="/myspace/setting">
+                            <button className="btn-profile-manage">프로필 관리</button>
+                        </Link>
+                    </div>
+                </section>
+
+                <section className="section-works">
+                    <p className="section-welcome-message">Welcome to my space</p>
+
+                    <div className="folder-icons-container">
+                        {folders.map(folder => (
+                            <Link key={folder.id} to={folder.link} className="folder-item">
+                                <div className="folder-icon-circle">
+                                    <img src={folder.img} alt={`${folder.name} 폴더`} />
+                                </div>
+                                <span className="folder-name">{folder.name}</span>
+                            </Link>
+                        ))}
+                    </div>
+
+                    <div className="artwork-orbit-area">
+                        <div className="orbit orbit-outer">
+                            {outerOrbitArtworks.map((artwork, index) => (
+                                <Link
+                                    key={artwork.id}
+                                    to={artwork.link}
+                                    className={`artwork-item item-${index + 1} ${artwork.orientation}`}
+                                    title={`작품 ${artwork.id}`}
+                                >
+                                    <img src={artwork.img} alt={`작품 ${artwork.id}`} />
+                                </Link>
+                            ))}
+                        </div>
+                        <div className="orbit orbit-inner">
+                            {innerOrbitArtworks.map((artwork, index) => (
+                                <Link
+                                    key={artwork.id}
+                                    to={artwork.link}
+                                    className={`artwork-item item-${index + 5} ${artwork.orientation}`}
+                                    title={`작품 ${artwork.id}`}
+                                >
+                                    <img src={artwork.img} alt={`작품 ${artwork.id}`} />
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <br />
+                        <p className="section-welcome-message">
+                            궤도를 회전하여 {userData.name}님의 스페이스를 탐험해보세요.
+                        </p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    );
+};
+
+export default MySpace;

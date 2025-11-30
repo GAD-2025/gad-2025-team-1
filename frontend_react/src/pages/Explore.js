@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import Header from '../components/Header';
 import './Explore.css';
 
 const Explore = () => {
@@ -225,33 +225,7 @@ const Explore = () => {
                 </div>
             )}
 
-            <header className="sticky top-0 z-[100] bg-gray-900/90 backdrop-blur-md shadow-lg border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <a href="#" className="logo-placeholder" onClick={resetSearch}>
-                            cre<span className="ai">AI</span>tive
-                        </a>
-                        
-                        <nav className="hidden md:flex space-x-6">
-                            <a href="#" className="text-gray-300 hover:text-white transition">거래하기</a>
-                            <button className="text-gray-300 hover:text-white transition">작품 보관함</button>
-                            <Link to="/myspace" className="text-gray-300 hover:text-white transition">마이스페이스</Link>
-                            <button className="text-gray-300 hover:text-white transition">설정</button>
-                        </nav>
-
-                        <div className="flex items-center space-x-6">
-                            <div className="relative cursor-pointer group" title="장바구니">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300 group-hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                {cart.length > 0 && <span id="cartCountBadge" className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 animate-bounce">{cart.length}</span>}
-                            </div>
-
-                            <button className="bg-white text-gray-900 px-5 py-2 font-bold rounded-full text-sm hover:bg-gray-200 transition">로그인</button>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <section className="py-12 text-center">
