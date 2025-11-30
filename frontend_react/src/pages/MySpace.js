@@ -1,66 +1,70 @@
 import React, { useState, useEffect } from 'react';
-// ★ 1. Link를 여기서 꼭 불러와야 에러가 안 납니다!
 import { Link } from 'react-router-dom'; 
 import Header from '../components/Header';
 import './MySpace.css';
 
 const MySpace = () => {
     const [userData, setUserData] = useState({
-        name: 'Guest', // 기본값
+        name: 'Guest',
         bio: '로그인이 필요합니다.',
         img: '/images/White Cats.jpg'
     });
 
+    // 기본 폴더 (데이터 없을 시)
     const [folders, setFolders] = useState([
-        { id: 1, name: 'WISH', img: '/images/folder_1.jpg', link: '/myspace/folder' },
-        { id: 2, name: 'My Work', img: '/images/folder_2.jpg', link: '/my-work' },
-        { id: 3, name: 'ART', img: '/images/folder_3.jpg', link: '/art-folder' }
+        { id: 1, name: 'WISH', img: '/images/folder_1.jpg', link: '/myspace/folder/1' },
+        { id: 2, name: 'My Work', img: '/images/folder_2.jpg', link: '/myspace/folder/2' },
+        { id: 3, name: 'ART', img: '/images/folder_3.jpg', link: '/myspace/folder/3' }
     ]);
 
-    const [orbitArtworks, setOrbitArtworks] = useState([
-        { id: 1, img: '/images/art_5.jpg', link: '/node/1', orbit: 'outer', orientation: 'horizontal' },
-        { id: 2, img: '/images/art_6.jpg', link: '/myspace/node', orbit: 'outer', orientation: 'horizontal' },
-        { id: 3, img: '/images/art_7.jpg', link: '/node/3', orbit: 'outer', orientation: 'horizontal' },
-        { id: 4, img: '/images/art_1.jpg', link: '/node/4', orbit: 'outer', orientation: 'vertical' },
-        { id: 5, img: '/images/art_2.jpg', link: '/node/5', orbit: 'inner', orientation: 'vertical' },
-        { id: 6, img: '/images/art_3.jpg', link: '/node/6', orbit: 'inner', orientation: 'vertical' },
-        { id: 7, img: '/images/art_4.jpg', link: '/node/7', orbit: 'inner', orientation: 'vertical' }
-    ]);
+    const [orbitArtworks, setOrbitArtworks] = useState([]);
 
+    // 이웃 및 소셜 링크 (고정 데이터)
     const neighbors = [
-        { id: 1, img: '/images/friend_1.jpg', alt: '이웃 프로필 1' },
-        { id: 2, img: '/images/friend_2.jpg', alt: '이웃 프로필 2' },
-        { id: 3, img: '/images/friend_3.jpg', alt: '이웃 프로필 3' },
-        { id: 4, img: '/images/friend_4.jpg', alt: '이웃 프로필 4' }
+        { id: 1, img: '/images/friend_1.jpg' }, { id: 2, img: '/images/friend_2.jpg' },
+        { id: 3, img: '/images/friend_3.jpg' }, { id: 4, img: '/images/friend_4.jpg' }
     ];
-
     const socialLinks = [
-        { id: 'insta', href: 'https://instagram.com', icon: 'fab fa-instagram', title: 'Instagram' },
-        { id: 'facebook', href: 'https://facebook.com', icon: 'fab fa-facebook-f', title: 'Facebook' },
-        { id: 'youtube', href: 'https://youtube.com', icon: 'fab fa-youtube', title: 'YouTube' },
-        { id: 'email', href: 'mailto:user@email.com', icon: 'fas fa-envelope', title: 'Email' }
+        { id: 'insta', href: '#', icon: 'fab fa-instagram' },
+        { id: 'email', href: '#', icon: 'fas fa-envelope' }
     ];
 
     useEffect(() => {
-        // ★ 2. 로그인 정보 가져오기 (Login.js에서 저장한 currentUser)
+        // 1. 유저 정보 로드
         const storedUser = sessionStorage.getItem('currentUser');
-        
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
-            // 로그인한 정보로 상태 업데이트
-            setUserData(prev => ({
-                ...prev,
-                name: parsedUser.nickname, // 로그인한 유저의 닉네임
-                bio: parsedUser.bio || '창작을 좋아하는 열정가득 대학생입니다', // 없으면 기본값
+            setUserData({
+                name: parsedUser.nickname,
+                bio: parsedUser.bio || '',
                 img: parsedUser.profile_image || '/images/White Cats.jpg'
-            }));
-        } else {
-            // (선택사항) 기존 localStorage 로직 유지
-            const savedData = localStorage.getItem('myspaceData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                if (data.name) setUserData(prev => ({ ...prev, name: data.name }));
-                // ... 기타 데이터 로드
+            });
+        }
+
+        // 2. 설정 데이터(폴더/궤도) 로드
+        const savedData = localStorage.getItem('myspaceData');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            
+            // 폴더 정보 업데이트
+            if (data.folders) {
+                setFolders(data.folders.map(f => ({
+                    ...f,
+                    link: `/myspace/folder/${f.id}` // ★ 클릭 시 해당 폴더로 이동하게 링크 수정
+                })));
+            }
+
+            // 궤도 정보 업데이트
+            if (data.orbit) {
+                // 저장된 이미지 URL 배열을 궤도 객체 배열로 변환
+                const newOrbit = data.orbit.map((imgUrl, index) => ({
+                    id: index,
+                    img: imgUrl,
+                    link: '#', // 클릭 시 상세페이지 (추후 구현)
+                    orbit: index % 2 === 0 ? 'outer' : 'inner',
+                    orientation: 'vertical'
+                }));
+                setOrbitArtworks(newOrbit);
             }
         }
     }, []);
@@ -70,68 +74,37 @@ const MySpace = () => {
 
     return (
         <div className="myspace-page">
-            <div
-                className="myspace-page-background"
-                style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/images/space_background.jpg)` }}
-            />
-
-            {/* Header 컴포넌트 */}
+            <div className="myspace-page-background" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/images/space_background.jpg)` }} />
             <Header />
 
             <main className="myspace-container">
                 <section className="section-profile">
                     <div className="profile-visual-area">
-                        {neighbors.map((neighbor, index) => (
-                            <div key={neighbor.id} className={`neighbor-profile neighbor-${index + 1}`}>
-                                <img src={neighbor.img} alt={neighbor.alt} />
-                            </div>
+                        {neighbors.map((n, i) => (
+                            <div key={n.id} className={`neighbor-profile neighbor-${i + 1}`}><img src={n.img} alt="neighbor"/></div>
                         ))}
-
                         <div className="profile-image-wrapper">
-                            <img
-                                src={userData.img}
-                                alt="프로필 사진"
-                                className="profile-main-image"
-                            />
+                            <img src={userData.img} alt="profile" className="profile-main-image" />
                             <div className="social-orbit-container">
-                                {socialLinks.map(social => (
-                                    <a
-                                        key={social.id}
-                                        href={social.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={`social-icon social-${social.id}`}
-                                        title={social.title}
-                                    >
-                                        <i className={social.icon}></i>
-                                    </a>
-                                ))}
+                                {socialLinks.map(s => <a key={s.id} href={s.href} className={`social-icon social-${s.id}`}><i className={s.icon}></i></a>)}
                             </div>
                         </div>
                     </div>
 
                     <div className="profile-info">
-                        {/* ★ 로그인한 사용자의 이름이 여기에 표시됩니다 */}
-                        <h1 className="user-name">
-                            {userData.name}
-                            <span className="badge-me">me</span>
-                        </h1>
+                        <h1 className="user-name">{userData.name}<span className="badge-me">me</span></h1>
                         <p className="user-bio">{userData.bio}</p>
-                        <Link to="/myspace/setting">
-                            <button className="btn-profile-manage">프로필 관리</button>
-                        </Link>
+                        <Link to="/myspace/setting"><button className="btn-profile-manage">프로필 관리</button></Link>
                     </div>
                 </section>
 
                 <section className="section-works">
                     <p className="section-welcome-message">Welcome to my space</p>
-
                     <div className="folder-icons-container">
+                        {/* 폴더 클릭 시 데이터를 state로 넘겨줌 */}
                         {folders.map(folder => (
-                            <Link key={folder.id} to={folder.link} className="folder-item">
-                                <div className="folder-icon-circle">
-                                    <img src={folder.img} alt={`${folder.name} 폴더`} />
-                                </div>
+                            <Link key={folder.id} to={folder.link} state={{ folderData: folder }} className="folder-item">
+                                <div className="folder-icon-circle"><img src={folder.img} alt={folder.name} /></div>
                                 <span className="folder-name">{folder.name}</span>
                             </Link>
                         ))}
@@ -139,36 +112,19 @@ const MySpace = () => {
 
                     <div className="artwork-orbit-area">
                         <div className="orbit orbit-outer">
-                            {outerOrbitArtworks.map((artwork, index) => (
-                                <Link
-                                    key={artwork.id}
-                                    to={artwork.link}
-                                    className={`artwork-item item-${index + 1} ${artwork.orientation}`}
-                                    title={`작품 ${artwork.id}`}
-                                >
-                                    <img src={artwork.img} alt={`작품 ${artwork.id}`} />
+                            {outerOrbitArtworks.map((art, i) => (
+                                <Link key={i} to={art.link} className={`artwork-item item-${i+1} ${art.orientation}`}>
+                                    <img src={art.img} alt="art" />
                                 </Link>
                             ))}
                         </div>
                         <div className="orbit orbit-inner">
-                            {innerOrbitArtworks.map((artwork, index) => (
-                                <Link
-                                    key={artwork.id}
-                                    to={artwork.link}
-                                    className={`artwork-item item-${index + 5} ${artwork.orientation}`}
-                                    title={`작품 ${artwork.id}`}
-                                >
-                                    <img src={artwork.img} alt={`작품 ${artwork.id}`} />
+                            {innerOrbitArtworks.map((art, i) => (
+                                <Link key={i} to={art.link} className={`artwork-item item-${i+5} ${art.orientation}`}>
+                                    <img src={art.img} alt="art" />
                                 </Link>
                             ))}
                         </div>
-                    </div>
-
-                    <div>
-                        <br />
-                        <p className="section-welcome-message">
-                            궤도를 회전하여 {userData.name}님의 스페이스를 탐험해보세요.
-                        </p>
                     </div>
                 </section>
             </main>

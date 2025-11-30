@@ -31,7 +31,9 @@ function App() {
           {/* 마이스페이스 관련 */}
           <Route path="/myspace" element={<MySpace />} />
           <Route path="/myspace/setting" element={<MySpaceSetting />} />
-          
+          <Route path="/myspace/folder/:id" element={<MySpaceFolder />} />
+          <Route path="/myspace/node" element={<MySpaceNode />} />
+
           {/* 마켓플레이스 관련 */}
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/detail" element={<MarketplaceDetail />} />
