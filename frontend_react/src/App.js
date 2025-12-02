@@ -16,6 +16,7 @@ import MySpaceNode from './pages/MySpaceNode';     // 필요하다면 추가
 import MySpaceSetting from './pages/MySpaceSetting';
 import Setting from './pages/Setting';
 import SignUp from './pages/SignUp';
+import Upload from './pages/Upload';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           {/* 아카이브 관련 */}
           <Route path="/archive" element={<Archive />} />
           <Route path="/archive/detail" element={<ArchiveDetail />} />
+          <Route path="/upload" element={<Upload />} />
 
           {/* 설정 및 로그인 */}
           <Route path="/setting" element={<Setting />} />

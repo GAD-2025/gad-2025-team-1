@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Archive.css';
 
 const Archive = () => {
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState('내 작품 목록');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeKeyword, setActiveKeyword] = useState('일러스트');
@@ -27,8 +28,9 @@ const Archive = () => {
         { id: 5, label: "주사위 놀이", src: "https://picsum.photos/60/60?random=5" }
     ];
 
-    const handleUploadClick = () => alert('작품 업로드 기능을 실행합니다.');
+    const handleUploadClick = () => navigate('/upload');
     const handleAiPriceClick = () => alert('AI가 적정 가격을 분석 중입니다...');
+    const handleSaveClick = () => alert('작품 정보가 저장되었습니다.');
 
     const renderArtworkGrid = () => (
         <section className="artwork-grid">
@@ -156,8 +158,12 @@ const Archive = () => {
                                 <div className="form-row">
                                     <div className="form-label">작품 공개/비공개 설정</div>
                                     <button className={`visibility-button ${isPublic ? 'active' : ''}`} onClick={() => setIsPublic(!isPublic)}>
-                                        {isPublic ? '공개' : '비공개'}
+                                        {isPublic ? '공개' : '비공개'} <span className="eye-icon">👁</span>
                                     </button>
+                                </div>
+
+                                <div className="form-row" style={{marginTop: '10px'}}>
+                                    <button className="save-button" onClick={handleSaveClick}>저장하기</button>
                                 </div>
                             </div>
                         </div>

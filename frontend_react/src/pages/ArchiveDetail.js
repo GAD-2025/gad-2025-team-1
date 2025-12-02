@@ -4,6 +4,8 @@ import './ArchiveDetail.css';
 
 const ArchiveDetail = () => {
     const [promptText, setPromptText] = useState(`우아한 고양이가 커다란 찻잔 위에 앉아 있으며, 주변에는 커피와 초콜릿, 아이스크림 같은 카페 아이템들이 산재해 있다. 따뜻하고 아늑한 분위기, 파스텔 톤의 색감.`);
+    const [showModal, setShowModal] = useState(false);
+    const [modalImage, setModalImage] = useState('');
     
     const handleColorTokenClick = (e) => {
         const button = e.target;
@@ -11,6 +13,15 @@ const ArchiveDetail = () => {
             button.classList.add('copied');
             setTimeout(() => button.classList.remove('copied'), 1000);
         });
+    };
+
+    const handleThumbnailClick = (imgSrc) => {
+        setModalImage(imgSrc);
+        setShowModal(true);
+    };
+
+    const handleModalClose = () => {
+        setShowModal(false);
     };
 
     return (
@@ -22,7 +33,33 @@ const ArchiveDetail = () => {
             <main className="detail-container">
                 <div className="detail-content">
                     <div className="detail-left">
-                        <h2 id="artwork-title" className="artwork-title">동화의 꿀</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+                            <h2 id="artwork-title" className="artwork-title">동화의 끝</h2>
+                            <img 
+                                src={`${process.env.PUBLIC_URL}/images/이미지5.png`}
+                                alt="동화의 끝" 
+                                className="title-thumbnail" 
+                                id="titleThumbnail" 
+                                style={{
+                                    width: '80px',
+                                    height: '80px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    border: '2px solid rgba(255, 107, 0, 0.3)',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onClick={() => handleThumbnailClick(`${process.env.PUBLIC_URL}/images/이미지5.png`)}
+                                onMouseEnter={(e) => {
+                                    e.target.style.borderColor = '#FF6B00';
+                                    e.target.style.transform = 'scale(1.05)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.borderColor = 'rgba(255, 107, 0, 0.3)';
+                                    e.target.style.transform = 'scale(1)';
+                                }}
+                            />
+                        </div>
                         
                         <div className="detail-info">
                             <div className="info-row">
@@ -98,6 +135,39 @@ const ArchiveDetail = () => {
                     <button className="btn-more-idea">다음보기</button>
                 </div>
             </main>
+
+            {/* 이미지 확대 모달 */}
+            {showModal && (
+                <div 
+                    id="imageModal" 
+                    style={{
+                        display: 'flex',
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        background: 'rgba(0,0,0,0.9)',
+                        zIndex: 1000,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        cursor: 'pointer'
+                    }}
+                    onClick={handleModalClose}
+                >
+                    <img 
+                        id="modalImage" 
+                        src={modalImage} 
+                        alt="확대 이미지" 
+                        style={{
+                            maxWidth: '90%',
+                            maxHeight: '90%',
+                            objectFit: 'contain',
+                            borderRadius: '10px'
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
