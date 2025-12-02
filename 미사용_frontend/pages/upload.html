@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작품 업로드</title>
+    <link rel="stylesheet" href="../style/upload.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-section header-left">
+            <a href="/gad-2025-team-1/frontend/pages/explore.html" class="header-logo">
+                <span style="color: #FF5900;">creAItive</span>
+            </a>
+        </div>
+        <nav class="header-section header-center">
+            <ul class="header-menu">
+                <li><a href="../../frontend/pages/marketplace.html">거래하기</a></li>
+                <li><a href="../../frontend/pages/archive.html">작품보관함</a></li>
+                <li><a href="../../frontend/pages/myspace.html">마이 스페이스</a></li>
+                <li><a href="../../frontend/pages/setting.html">설정</a></li>
+            </ul>
+        </nav>
+        <div class="header-section header-right">
+            <a href="../../frontend/pages/login.html" class="login-button">로그인</a>
+        </div>
+    </header>
+
+    <main class="upload-container">
+        <button class="back-button" onclick="window.location.href='archive.html'">&lt;</button>
+        <div class="upload-header">
+            <h1 class="upload-title">작품 업로드</h1>
+        </div>
+
+        <!-- 이미지 업로드 박스 -->
+        <section class="image-upload-section">
+            <div class="upload-box-container">
+                <div class="image-upload-box" id="imageUploadBox">
+                    <div class="upload-icon">📷</div>
+                    <p class="upload-text">이미지를 업로드하려면 클릭하세요</p>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="preview-container" id="previewContainer" style="display: none;">
+                    <img id="previewImage" src="" alt="미리보기">
+                    <button class="remove-image-btn" id="removeImageBtn">✕</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 작품 정보 입력 폼 -->
+        <section class="artwork-info-section">
+            <div class="info-form">
+                <!-- 작품 설명 -->
+                <div class="form-row">
+                    <div class="form-label">작품 설명</div>
+                    <div class="keyword-buttons">
+                        <button class="keyword-btn active">일러스트</button>
+                        <button class="keyword-btn">그래픽</button>
+                        <button class="keyword-btn">3D</button>
+                    </div>
+                    <textarea class="description-input" placeholder="활용 분야, 작품 설명을 입력해주세요..."></textarea>
+                </div>
+
+                <!-- 가격 정보 -->
+                <div class="form-row">
+                    <div class="form-label">가격 정보</div>
+                    <div class="price-row">
+                        <input type="text" class="price-input" placeholder="가격 입력">
+                        <button class="ai-price-button">AI 가격 제안</button>
+                    </div>
+                </div>
+
+                <!-- 판매자 자체 제작률 -->
+                <div class="form-row">
+                    <div class="form-label">판매자 자체 제작률</div>
+                    <div class="rate-inputs">
+                        <input type="text" class="rate-input" placeholder="AI 사용 툴">
+                        <input type="text" class="rate-input" placeholder="AI 사용 비율">
+                    </div>
+                </div>
+
+                <!-- 프롬프트 입력 -->
+                <div class="form-row">
+                    <div class="form-label">프롬프트 입력</div>
+                    <textarea class="prompt-input" placeholder="프롬프트 내용을 입력해주세요..."></textarea>
+                </div>
+
+                <!-- 작품 공개/비공개 설정 -->
+                <div class="form-row">
+                    <div class="form-label">작품 공개/비공개 설정</div>
+                    <button class="visibility-button active">공개 <span class="eye-icon">👁</span></button>
+                </div>
+
+                <!-- 업로드 버튼 -->
+                <div class="form-row" style="margin-top: 30px;">
+                    <button class="submit-button">작품 업로드</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../backend/upload.js"></script>
+</body>
+</html>

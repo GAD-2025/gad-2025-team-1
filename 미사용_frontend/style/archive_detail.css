@@ -24,7 +24,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('/gad-2025-team-1/frontend/images/space_background.jpg'); /* ✨ 우주 이미지 경로 설정 */
+    background-image: url('../images/배경이.png'); /* ✨ 배경 이미지 경로 설정 */
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
@@ -59,7 +59,7 @@ body::before {
 
 /* 1. 왼쪽 섹션: 로고 */
 .header-logo {
-    font-size: 1.5em; /* 마이스페이스 기준 */
+    font-size: 1em; /* 마이스페이스 기준 */
     font-weight: bold;
     text-decoration: none;
     color: white;
@@ -77,7 +77,7 @@ body::before {
 .header-menu a {
     text-decoration: none;
     color: #ccc;
-    font-size: 1em; /* 마이스페이스 기준 */
+    font-size: 0.7em; /* 마이스페이스 기준 */
     padding: 0 5px;
     transition: color 0.2s, border-bottom 0.2s;
 }

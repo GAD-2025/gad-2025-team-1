@@ -48,7 +48,9 @@
             <button class="filter-btn">내 작품 목록</button>
         </div>
 
-        <section class="artwork-grid">
+        <div class="artwork-slider-container">
+            <button class="slider-arrow slider-arrow-left" onclick="slideArtworks(-1)">‹</button>
+            <section class="artwork-grid" id="artworkGrid">
             
             <div class="artwork-item" data-id="1">
                 <img src="../images/이미지6.png" alt="픽셀의 경계" class="item-thumbnail">
@@ -109,18 +111,9 @@
                 </div>
             </div>
 
-            <div class="artwork-item" data-id="6">
-                 <img src="../images/이미지4.png" alt="별의 정원" class="item-thumbnail">
-                <div class="item-info">
-                    <p class="item-title">별의 정원</p>
-                    <p class="item-artist">ID: Synapse_7</p>
-                    <p class="item-date">구매일: 25/10/1</p>
-                    <p class="item-purchase">수정일: 25/10/4</p>
-                    <span class="item-badge">-</span>
-                </div>
-            </div>
-
         </section>
+            <button class="slider-arrow slider-arrow-right" onclick="slideArtworks(1)">›</button>
+        </div>
 
         <!-- 새로운 디자인 섹션 -->
         <section class="new-dashboard-section">
@@ -230,7 +223,12 @@
                         <!-- 작품 공개/비공개 설정 -->
                         <div class="form-row">
                             <div class="form-label">작품 공개/비공개 설정</div>
-                            <button class="visibility-button active">공개</button>
+                            <button class="visibility-button active">공개 <span class="eye-icon">👁</span></button>
+                        </div>
+
+                        <!-- 저장하기 버튼 -->
+                        <div class="form-row">
+                            <button class="save-button">저장하기</button>
                         </div>
                     </div>
                 </div>
@@ -258,7 +256,7 @@
 
         // 업로드 박스 클릭 이벤트
         document.querySelector('.upload-box').addEventListener('click', function() {
-            alert('작품 업로드 기능을 실행합니다.');
+            window.location.href = 'upload.html';
         });
 
         // AI 가격 제안 버튼
@@ -270,12 +268,31 @@
         document.querySelector('.visibility-button').addEventListener('click', function() {
             if (this.classList.contains('active')) {
                 this.classList.remove('active');
-                this.textContent = '비공개';
+                this.innerHTML = '비공개 <span class="eye-icon">👁</span>';
             } else {
                 this.classList.add('active');
-                this.textContent = '공개';
+                this.innerHTML = '공개 <span class="eye-icon">👁</span>';
             }
         });
+
+        // 저장하기 버튼
+        document.querySelector('.save-button').addEventListener('click', function() {
+            alert('작품 정보가 저장되었습니다.');
+        });
+
+        // 작품 슬라이더 기능
+        let currentSlide = 0;
+        function slideArtworks(direction) {
+            const grid = document.getElementById('artworkGrid');
+            const items = grid.querySelectorAll('.artwork-item');
+            const itemWidth = items[0].offsetWidth + 25; // 아이템 너비 + gap
+            
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide > items.length - 1) currentSlide = items.length - 1;
+            
+            grid.style.transform = `translateX(-${currentSlide * itemWidth}px)`;
+        }
     </script>
 </body>
 </html>
