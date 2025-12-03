@@ -136,36 +136,111 @@ app.get('/api/inventory/:userId', async (req, res) => {
     }
 });
 
-// ★ [NEW] 2. 마이스페이스 설정(폴더+궤도+프로필) 한 번에 저장 API
-app.put('/api/myspace/save', async (req, res) => {
-    const { id, name, bio, img, folders, orbit } = req.body; // orbit은 이미지 경로 배열이 아니라 객체 배열이어야 함
+// ... (기존 로그인/회원가입 코드 유지) ...
 
+// ★ [NEW] 마이스페이스 데이터 조회 (설정 페이지 & 메인 페이지용)
+app.get('/api/myspace/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        // 1. 내 폴더 3개 가져오기
+        const [folders] = await pool.query(
+            `SELECT id, name, cover_image as thumb, folder_index FROM myspace_folders WHERE user_id = ? ORDER BY folder_index`, 
+            [userId]
+        );
+
+        // 2. 각 폴더 안에 들어있는 작품 가져오기
+        for (let folder of folders) {
+            const [works] = await pool.query(
+                `SELECT a.image_url FROM folder_items fi 
+                 JOIN artworks a ON fi.artwork_id = a.id 
+                 WHERE fi.folder_id = ?`, 
+                [folder.id]
+            );
+            folder.works = works.map(w => w.image_url); // 이미지 경로만 배열로 추출
+        }
+
+        // 3. 내 궤도(Orbit) 작품 가져오기
+        const [orbitRows] = await pool.query(
+            `SELECT a.image_url FROM myspace_orbit mo
+             JOIN artworks a ON mo.artwork_id = a.id
+             WHERE mo.user_id = ? ORDER BY mo.position_index`,
+            [userId]
+        );
+        const orbit = orbitRows.map(o => o.image_url);
+
+        // 4. 내가 구매한(보유한) 전체 작품 목록 가져오기 (설정 페이지 피커용)
+        const [inventoryRows] = await pool.query(
+            `SELECT a.id, a.title, a.image_url FROM purchases p
+             JOIN artworks a ON p.artwork_id = a.id
+             WHERE p.user_id = ?`,
+            [userId]
+        );
+
+        res.json({ success: true, folders, orbit, inventory: inventoryRows });
+
+    } catch (error) {
+        console.error("마이스페이스 로드 실패:", error);
+        res.status(500).json({ success: false, message: "데이터 로드 실패" });
+    }
+});
+
+// ★ [NEW] 마이스페이스 설정 통째로 저장하기
+app.put('/api/myspace/save', async (req, res) => {
+    const { id, name, bio, img, folders, orbit } = req.body;
+    
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
-        // 1. 유저 기본 정보 업데이트
+        // 1. 프로필 정보 업데이트
         await connection.query(
             `UPDATE users SET nickname = ?, bio = ?, profile_image = ? WHERE username = ?`,
             [name, bio, img, id]
         );
 
-        // 2. 기존 폴더/궤도 데이터 삭제 (덮어쓰기 위해)
+        // 2. 폴더 정보 업데이트 (이름, 커버이미지)
+        for (let folder of folders) {
+            // folder.id가 있으면 업데이트
+            await connection.query(
+                `UPDATE myspace_folders SET name = ?, cover_image = ? WHERE id = ? AND user_id = ?`,
+                [folder.name, folder.thumb, folder.id, id]
+            );
+
+            // 3. 폴더 내용물(작품) 업데이트: 싹 지우고 다시 넣기 (가장 쉬운 동기화 방법)
+            await connection.query(`DELETE FROM folder_items WHERE folder_id = ?`, [folder.id]);
+            
+            if (folder.works && folder.works.length > 0) {
+                // works 배열에는 이미지 경로(URL)가 들어있음. 이걸로 artwork_id를 찾아야 함.
+                // (성능상 비효율적일 수 있지만, 현재 구조에선 이게 최선)
+                for (let workImg of folder.works) {
+                    const [artRow] = await connection.query(`SELECT id FROM artworks WHERE image_url = ?`, [workImg]);
+                    if (artRow.length > 0) {
+                        await connection.query(`INSERT INTO folder_items (folder_id, artwork_id) VALUES (?, ?)`, [folder.id, artRow[0].id]);
+                    }
+                }
+            }
+        }
+
+        // 4. 궤도(Orbit) 업데이트: 싹 지우고 다시 넣기
         await connection.query(`DELETE FROM myspace_orbit WHERE user_id = ?`, [id]);
         
-        // 주의: 실제로는 폴더 테이블과 아이템 테이블을 정교하게 관리해야 하지만, 
-        // 여기서는 로직 단순화를 위해 DB 저장은 생략하고 프론트엔드 localStorage와 연동하거나
-        // 추후 폴더 테이블 구현 시 이 부분에 INSERT 로직을 넣습니다.
-        // (이번 단계에서는 프로필 업데이트와 성공 응답 위주로 처리합니다.)
-
-        /* 실제 DB 구현 시:
-           1. myspace_folders 데이터 DELETE 후 INSERT
-           2. folder_items 데이터 DELETE 후 INSERT
-           3. myspace_orbit 데이터 DELETE 후 INSERT
-        */
+        if (orbit && orbit.length > 0) {
+            let pos = 0;
+            for (let orbitImg of orbit) {
+                const [artRow] = await connection.query(`SELECT id FROM artworks WHERE image_url = ?`, [orbitImg]);
+                if (artRow.length > 0) {
+                    // 궤도 타입(inner/outer)은 단순화를 위해 일단 'outer'로 통일하거나 순서대로 배분
+                    await connection.query(
+                        `INSERT INTO myspace_orbit (user_id, artwork_id, orbit_type, position_index) VALUES (?, ?, ?, ?)`,
+                        [id, artRow[0].id, 'outer', pos++]
+                    );
+                }
+            }
+        }
 
         await connection.commit();
         
+        // 성공 후 최신 유저 정보 리턴
         res.json({ 
             success: true, 
             user: { username: id, nickname: name, bio: bio, profile_image: img }
@@ -173,7 +248,7 @@ app.put('/api/myspace/save', async (req, res) => {
 
     } catch (error) {
         await connection.rollback();
-        console.error(error);
+        console.error("저장 에러:", error);
         res.status(500).json({ success: false, message: "저장 실패" });
     } finally {
         connection.release();

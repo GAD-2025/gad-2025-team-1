@@ -10,16 +10,9 @@ const MySpace = () => {
         img: '/images/White Cats.jpg'
     });
 
-    // 기본 폴더 (데이터 없을 시)
-    const [folders, setFolders] = useState([
-        { id: 1, name: 'WISH', img: '/images/folder_1.jpg', link: '/myspace/folder/1' },
-        { id: 2, name: 'My Work', img: '/images/folder_2.jpg', link: '/myspace/folder/2' },
-        { id: 3, name: 'ART', img: '/images/folder_3.jpg', link: '/myspace/folder/3' }
-    ]);
-
+    const [folders, setFolders] = useState([]);
     const [orbitArtworks, setOrbitArtworks] = useState([]);
 
-    // 이웃 및 소셜 링크 (고정 데이터)
     const neighbors = [
         { id: 1, img: '/images/friend_1.jpg' }, { id: 2, img: '/images/friend_2.jpg' },
         { id: 3, img: '/images/friend_3.jpg' }, { id: 4, img: '/images/friend_4.jpg' }
@@ -30,42 +23,39 @@ const MySpace = () => {
     ];
 
     useEffect(() => {
-        // 1. 유저 정보 로드
         const storedUser = sessionStorage.getItem('currentUser');
         if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUserData({
-                name: parsedUser.nickname,
-                bio: parsedUser.bio || '',
-                img: parsedUser.profile_image || '/images/White Cats.jpg'
-            });
-        }
-
-        // 2. 설정 데이터(폴더/궤도) 로드
-        const savedData = localStorage.getItem('myspaceData');
-        if (savedData) {
-            const data = JSON.parse(savedData);
+            const user = JSON.parse(storedUser);
             
-            // 폴더 정보 업데이트
-            if (data.folders) {
-                setFolders(data.folders.map(f => ({
-                    ...f,
-                    link: `/myspace/folder/${f.id}` // ★ 클릭 시 해당 폴더로 이동하게 링크 수정
-                })));
-            }
+            // ★ 서버에서 최신 데이터(폴더, 궤도) 가져오기
+            fetch(`http://localhost:5000/api/myspace/${user.username}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        setUserData({
+                            name: user.nickname,
+                            bio: user.bio || '',
+                            img: user.profile_image || '/images/White Cats.jpg'
+                        });
 
-            // 궤도 정보 업데이트
-            if (data.orbit) {
-                // 저장된 이미지 URL 배열을 궤도 객체 배열로 변환
-                const newOrbit = data.orbit.map((imgUrl, index) => ({
-                    id: index,
-                    img: imgUrl,
-                    link: '#', // 클릭 시 상세페이지 (추후 구현)
-                    orbit: index % 2 === 0 ? 'outer' : 'inner',
-                    orientation: 'vertical'
-                }));
-                setOrbitArtworks(newOrbit);
-            }
+                        // 폴더 데이터 세팅
+                        setFolders(data.folders.map(f => ({
+                            ...f,
+                            img: f.thumb, // DB 필드명(thumb) -> 프론트(img) 매핑
+                            link: `/myspace/folder/${f.id}`
+                        })));
+
+                        // 궤도 데이터 세팅
+                        setOrbitArtworks(data.orbit.map((imgUrl, i) => ({
+                            id: i,
+                            img: imgUrl,
+                            link: '#',
+                            orbit: i % 2 === 0 ? 'outer' : 'inner', // 단순화를 위해 교차 배치
+                            orientation: i % 2 === 0 ? 'horizontal' : 'vertical'
+                        })));
+                    }
+                })
+                .catch(err => console.error(err));
         }
     }, []);
 
@@ -101,7 +91,6 @@ const MySpace = () => {
                 <section className="section-works">
                     <p className="section-welcome-message">Welcome to my space</p>
                     <div className="folder-icons-container">
-                        {/* 폴더 클릭 시 데이터를 state로 넘겨줌 */}
                         {folders.map(folder => (
                             <Link key={folder.id} to={folder.link} state={{ folderData: folder }} className="folder-item">
                                 <div className="folder-icon-circle"><img src={folder.img} alt={folder.name} /></div>
