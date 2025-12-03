@@ -1,0 +1,156 @@
+:root {
+    --color-bg-dark: #0a0a0a;
+    --color-accent-orange: #ff5722;
+    --color-art1: #38761d;
+    --color-art2: #674ea7;
+    --color-art3: #1c4587;
+}
+
+/* 기본 설정 및 배경 */
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background-color: black;
+    color: #ccc;
+    margin: 0;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.4;
+    z-index: -1;
+}
+
+/* --- Header Styles --- */
+.main-header {
+    width: 100%;
+    height: 60px;
+    background-color: black;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid #333;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-logo {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+.header-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 30px;
+}
+
+.header-menu a {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 1em;
+    padding: 0 5px;
+    transition: color 0.2s, border-bottom 0.2s;
+}
+
+.header-menu a:hover,
+.header-menu a.active {
+    color: white;
+    border-bottom: 2px solid #FF5900;
+}
+
+.login-button {
+    text-decoration: none;
+    color: white;
+    background-color: #FF5900;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background-color: #e64c00;
+    box-shadow: 0 0 10px rgba(255, 89, 0, 0.5);
+}
+
+/* 탐색 페이지 전용 스타일 */
+.search-bar-container {
+    display: flex;
+    max-width: 48rem;
+    margin: 0 auto;
+    background-color: #1f2937;
+    border-radius: 9999px;
+    padding: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+.search-input {
+    flex-grow: 1;
+    background: transparent;
+    padding: 0.75rem;
+    color: white;
+    outline: none;
+}
+.search-btn {
+    background-color: var(--color-accent-orange);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+.search-btn:hover { opacity: 0.9; }
+
+
+/* Modal specific styles */
+.modal-overlay {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: white;
+    padding: 3rem;
+    border-radius: 12px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    color: #333;
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+/* 이미지 플레이스홀더를 배경색과 잘 어울리도록 수정 */
+.aspect-square img {
+    opacity: 0.8;
+}

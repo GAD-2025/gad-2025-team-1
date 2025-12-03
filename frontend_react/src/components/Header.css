@@ -1,0 +1,81 @@
+/* --- Header Styles --- */
+.main-header {
+    width: 100%;
+    height: 60px;
+    background-color: black;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid #333;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-logo {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+.header-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 30px;
+}
+
+.header-menu a {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 1em;
+    padding: 0 5px;
+    transition: color 0.2s, border-bottom 0.2s;
+}
+
+.header-menu a:hover,
+.header-menu a.active {
+    color: white;
+    border-bottom: 2px solid #FF5900;
+}
+
+.login-button {
+    text-decoration: none;
+    color: white;
+    background-color: #FF5900;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background-color: #e64c00;
+    box-shadow: 0 0 10px rgba(255, 89, 0, 0.5);
+}
+
+.user-profile-widget {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.widget-user-name {
+    font-weight: bold;
+    color: white;
+    font-size: 0.9rem;
+}

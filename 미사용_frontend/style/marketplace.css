@@ -1,0 +1,86 @@
+/* explore.css와 동일한 기본 변수 및 레이아웃 상속 */
+:root {
+    --color-bg-dark: #0a0a0a;
+    --color-accent-orange: #ff5722;
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background-color: black;
+    color: #ccc;
+    margin: 0;
+    min-height: 100vh;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e5/Hubble_Ultra_Deep_Field_%28HUDF%29.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.4;
+    z-index: -1;
+}
+
+/* 헤더 스타일 (explore와 동일) */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    padding: 0 40px;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.header-logo { font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; }
+.header-menu { display: flex; gap: 30px; list-style: none; padding: 0; margin: 0; }
+.header-menu a { color: #ccc; text-decoration: none; transition: 0.2s; }
+.header-menu a:hover, .header-menu a.active { color: white; border-bottom: 2px solid var(--color-accent-orange); }
+
+/* 위젯 */
+.user-profile-widget { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.widget-profile-img { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--color-accent-orange); }
+.widget-info { display: flex; flex-direction: column; }
+.widget-user-name { font-weight: bold; color: white; font-size: 0.9rem; }
+.widget-badge-buyer { font-size: 0.6rem; background: #555; padding: 2px 5px; border-radius: 4px; color: white; }
+
+/* Footer */
+.main-footer { background-color: rgba(17, 24, 39, 0.9); border-top: 1px solid #1f2937; padding: 2rem 0; margin-top: 3rem; }
+
+/* 작품 카드 스타일 */
+.artwork-card {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    background-color: #374151;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-button {
+    /* 기본 링크 스타일 제거 */
+    text-decoration: none;
+    color: white; 
+    
+    /* 버튼처럼 보이도록 스타일링 */
+    background-color: #FF5900; /* 포인트 컬러 사용 */
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    
+    /* 호버 효과 (선택 사항) */
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background-color: #e64c00; /* 약간 어두운 색상 */
+    box-shadow: 0 0 10px rgba(255, 89, 0, 0.5); /* 은은한 발광 효과 */
+}
+
