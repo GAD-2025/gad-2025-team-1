@@ -73,6 +73,10 @@ const Archive = () => {
                     <button className={`filter-btn ${activeFilter === '내 작품 목록' ? 'active' : ''}`} onClick={() => setActiveFilter('내 작품 목록')}>
                         내 작품 목록
                     </button>
+                    <div className="top-box upload-box" onClick={handleUploadClick} style={{marginLeft: 'auto', minWidth: '200px', maxWidth: '200px', height: '50px', padding: '10px'}}>
+                        <div className="box-title" style={{fontSize: '14px', marginBottom: '0'}}>작품 업로드</div>
+                        <div className="upload-plus" style={{fontSize: '30px'}}>+</div>
+                    </div>
                 </div>
 
                 {renderArtworkGrid()}
@@ -83,11 +87,6 @@ const Archive = () => {
                     </div>
 
                     <div className="top-boxes">
-                        <div className="top-box upload-box" onClick={handleUploadClick}>
-                            <div className="box-title">작품 업로드</div>
-                            <div className="upload-plus">+</div>
-                        </div>
-
                         <div className="top-box sales-box">
                             <div className="box-title">판매 현황</div>
                             <div className="sales-chart">
