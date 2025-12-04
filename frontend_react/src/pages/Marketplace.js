@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Header from '../components/Header';
 
 const Marketplace = () => {
     // [1] Mock Data: 60개 생성
@@ -78,8 +79,6 @@ const Marketplace = () => {
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(5000);
 
-    const [cart] = useState([]); 
-
     // 페이지네이션
     const itemsPerPage = 20; 
     const [currentPage, setCurrentPage] = useState(1);
@@ -128,35 +127,7 @@ const Marketplace = () => {
             </div>
 
             {/* [변경됨] 헤더 디자인 통일 (검은색 배경 + 주황색 버튼) */}
-            <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <Link to="/" className="text-2xl font-extrabold text-white cursor-pointer hover:opacity-80 transition">
-                        cre<span className="text-orange-500">AI</span>tive
-                    </Link>
-
-                    <nav className="hidden md:flex space-x-8">
-                        {/* 활성화된 탭 */}
-                        <Link to="/marketplace" className="text-white font-bold border-b-2 border-orange-500 pb-1">거래하기</Link>
-                        {/* 비활성화된 탭 */}
-                        <Link to="/archive" className="text-gray-400 hover:text-white transition font-medium">작품 보관함</Link>
-                        <Link to="/myspace" className="text-gray-400 hover:text-white transition font-medium">마이스페이스</Link>
-                        <Link to="/setting" className="text-gray-400 hover:text-white transition font-medium">설정</Link>
-                    </nav>
-
-                    <div className="flex items-center space-x-6">
-                        <div className="relative cursor-pointer group" title="장바구니">
-                            <span className="text-2xl text-gray-400 group-hover:text-white transition">🛒</span>
-                            {cart.length > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{cart.length}</span>
-                            )}
-                        </div>
-                        {/* [변경됨] 로그인 버튼: 주황색 배경 */}
-                        <button className="bg-orange-600 text-white px-5 py-2 font-bold rounded-lg text-sm hover:bg-orange-700 transition">
-                            로그인
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header />
             
             <main className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 

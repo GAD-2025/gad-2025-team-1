@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Header from '../components/Header';
 
 const Explore = () => {
     // [1] 이미지 컬렉션 (30개의 고화질 우주/AI 아트)
@@ -77,7 +78,6 @@ const Explore = () => {
     const itemsPerPage = 8; // 탐색 페이지는 크게 보여주기 위해 8개 유지 (원하시면 늘려드립니다)
 
     // UI 상태
-    const [cart, setCart] = useState([]);
     const [selectedArtwork, setSelectedArtwork] = useState(null);
     const [loading, setLoading] = useState(false);
     const [recentSearches, setRecentSearches] = useState([]);
@@ -161,11 +161,7 @@ const Explore = () => {
 
     const addToCart = () => {
         if (!selectedArtwork) return;
-        if (cart.find(item => item.id === selectedArtwork.id)) {
-            alert("이미 장바구니에 있습니다.");
-            return;
-        }
-        setCart([...cart, selectedArtwork]);
+        // The original implementation had a cart state, but this is now managed by the Header component.
         alert(`🛒 '${selectedArtwork.title}' 장바구니에 담김!`);
     };
 
@@ -185,33 +181,7 @@ const Explore = () => {
             </div>
 
             {/* [변경됨] 헤더 디자인 통일 */}
-            <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <Link to="/" className="text-2xl font-extrabold text-white cursor-pointer hover:opacity-80 transition">
-                        cre<span className="text-orange-500">AI</span>tive
-                    </Link>
-                    
-                    <nav className="hidden md:flex space-x-8">
-                        {/* 탐색 페이지는 로고와 연결되므로 별도 탭 활성화보다는 전체 메뉴 제공 */}
-                        <Link to="/marketplace" className="text-gray-400 hover:text-white transition font-medium">거래하기</Link>
-                        <Link to="/archive" className="text-gray-400 hover:text-white transition font-medium">작품 보관함</Link>
-                        <Link to="/myspace" className="text-gray-400 hover:text-white transition font-medium">마이스페이스</Link>
-                        <Link to="/setting" className="text-gray-400 hover:text-white transition font-medium">설정</Link>
-                    </nav>
-
-                    <div className="flex items-center space-x-6">
-                        <div className="relative cursor-pointer group" title="장바구니">
-                            <span className="text-2xl text-gray-400 group-hover:text-white transition">🛒</span>
-                            {cart.length > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{cart.length}</span>
-                            )}
-                        </div>
-                        <button className="bg-orange-600 text-white px-5 py-2 font-bold rounded-lg text-sm hover:bg-orange-700 transition">
-                            로그인
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             <main className="relative z-10 max-w-7xl mx-auto px-4 py-10">
                 {/* 검색 섹션 */}
