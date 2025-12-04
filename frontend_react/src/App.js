@@ -2,39 +2,50 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
-// 페이지 불러오기
+// 1. 만들어둔 페이지들을 전부 불러옵니다 (Import)
+// (주의: 파일들이 pages 폴더 안에 있다고 가정했습니다. 만약 같은 폴더에 있다면 ./pages/를 지우고 ./만 남기세요)
 import Explore from './pages/Explore';
+import MySpace from './pages/MySpace';
+import Archive from './pages/Archive';
+import ArchiveDetail from './pages/ArchiveDetail';
+import Login from './pages/Login';
 import Marketplace from './pages/Marketplace';
 import MarketplaceDetail from './pages/MarketplaceDetail';
-
-// 아직 안 만든 페이지들은 주석 처리하거나, 파일이 있다면 import 유지하세요
-// import MySpace from './pages/MySpace';
-// import Archive from './pages/Archive';
-// import Setting from './pages/Setting';
-// import Login from './pages/Login';
-// import Upload from './pages/Upload'; 
+import MySpaceFolder from './pages/MySpaceFolder'; // 필요하다면 추가
+import MySpaceNode from './pages/MySpaceNode';     // 필요하다면 추가
+import MySpaceSetting from './pages/MySpaceSetting';
+import Setting from './pages/Setting';
+import SignUp from './pages/SignUp';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* 1. 탐색 페이지 (메인) */}
+          {/* 2. 주소(path)와 파일(element)을 연결해줍니다 (Route) */}
+          
+          {/* 메인 화면 */}
           <Route path="/" element={<Explore />} />
           <Route path="/explore" element={<Explore />} />
           
-          {/* 2. 거래하기 페이지 */}
-          <Route path="/marketplace" element={<Marketplace />} />
-          
-          {/* [중요] 상세 페이지: 뒤에 /:id 를 꼭 붙여야 합니다! */}
-          <Route path="/marketplace/detail/:id" element={<MarketplaceDetail />} />
+          {/* 마이스페이스 관련 */}
+          <Route path="/myspace" element={<MySpace />} />
+          <Route path="/myspace/setting" element={<MySpaceSetting />} />
+          <Route path="/myspace/folder/:id" element={<MySpaceFolder />} />
+          <Route path="/myspace/node" element={<MySpaceNode />} />
 
-          {/* 나머지 페이지 경로 (파일 생성 전까지 주석 처리 추천) */}
-          {/* <Route path="/myspace" element={<MySpace />} /> */}
-          {/* <Route path="/archive" element={<Archive />} /> */}
-          {/* <Route path="/setting" element={<Setting />} /> */}
-          {/* <Route path="/login" element={<Login />} /> */}
-          {/* <Route path="/upload" element={<Upload />} /> */}
+          {/* 마켓플레이스 관련 */}
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/detail" element={<MarketplaceDetail />} />
+
+          {/* 아카이브 관련 */}
+          <Route path="/archive" element={<Archive />} />
+          <Route path="/archive/detail" element={<ArchiveDetail />} />
+
+          {/* 설정 및 로그인 */}
+          <Route path="/setting" element={<Setting />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
 
         </Routes>
       </div>
