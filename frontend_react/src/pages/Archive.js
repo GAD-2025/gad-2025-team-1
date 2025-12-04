@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Link, useNavigate } from 'react-router-dom';
 import './Archive.css';
-
+//ㅇ//
 const Archive = () => {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState('내 작품 목록');
