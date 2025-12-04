@@ -19,9 +19,12 @@
   },
   "homepage": "https://github.com/GAD-2025/gad-2025-team-1#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mysql2": "^3.15.3"
   }
