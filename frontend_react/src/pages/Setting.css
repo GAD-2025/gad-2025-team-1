@@ -1,8 +1,520 @@
+
+/* Setting.css */
+
+/* 전체 레이아웃 */
 .setting-page {
-    color: white;
+    background-color: #f9f9f9;
+    min-height: 100vh;
 }
 
-.setting-container {
-    padding: 2rem;
+.setting-layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    gap: 40px;
+}
+
+/* 사이드바 스타일 */
+.setting-sidebar {
+    width: 250px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    height: fit-content;
+    padding: 20px 0;
+}
+
+.sidebar-header {
+    padding: 0 20px 15px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #666;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-menu li:hover {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.sidebar-menu li.active {
+    background-color: #fff4e6;
+    color: #FF5900;
+    border-left: 3px solid #FF5900;
+    font-weight: bold;
+}
+
+/* 메인 컨텐츠 영역 */
+.setting-content {
+    flex: 1;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 40px;
+    min-height: 600px;
+}
+
+.section-title {
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 24px;
+    color: #333;
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+}
+
+/* 수익 대시보드 스타일 */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.dash-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.dash-card h3 {
+    margin-top: 0;
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 15px;
+}
+
+.revenue-amount {
+    font-size: 28px;
+    font-weight: bold;
+    color: #FF5900;
+    margin: 10px 0;
+}
+
+.trend.positive {
+    color: #2ecc71;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.rank-list {
+    list-style: none;
+    padding: 0;
+}
+
+.rank-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 14px;
+}
+
+.rank-list li:last-child {
+    border-bottom: none;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #eee;
+    margin: 0 15px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar div {
+    height: 100%;
+    background: #FF5900;
+}
+
+/* 고객센터 스타일 */
+.toggle-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    background: #f5f5f5;
+    padding: 5px;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.toggle-btn {
+    padding: 8px 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #888;
+}
+
+.toggle-btn.active {
+    background: #fff;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.faq-list details {
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+}
+
+.faq-list summary {
+    cursor: pointer;
+    font-weight: bold;
+    list-style: none;
+}
+
+.faq-list summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-list summary::after {
+    content: '+';
+    float: right;
+    font-weight: normal;
+}
+
+.faq-list details[open] summary::after {
+    content: '-';
+}
+
+.faq-list p {
+    margin-top: 15px;
+    color: #666;
+    line-height: 1.5;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.inquiry-form .form-group {
+    margin-bottom: 20px;
+}
+
+.inquiry-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.inquiry-form input,
+.inquiry-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box; /* 패딩 포함 */
+}
+
+.inquiry-form textarea {
+    resize: vertical;
+}
+
+/* 구매/결제 내역 스타일 */
+.tabs-wrapper {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 30px;
+}
+
+.tab-btn {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 15px;
+    color: #888;
+    margin-right: 10px;
+}
+
+.tab-btn.active {
+    color: #FF5900;
+    border-bottom: 2px solid #FF5900;
+    font-weight: bold;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+    background: #f9f9f9;
+    font-weight: bold;
+    color: #555;
+}
+
+.badge.complete {
+    background: #e6f7ff;
+    color: #0077ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.payment-info-card {
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+}
+
+.card-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.card-icon {
+    width: 50px;
+    height: 30px;
+    background: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.card-detail p {
+    margin: 0 0 5px 0;
+    font-weight: bold;
+}
+
+.card-detail .expire {
+    font-size: 12px;
+    color: #888;
+}
+
+/* 공통 버튼 */
+.btn-primary {
+    background: #FF5900;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background: #e04e00;
+}
+
+.btn-outline {
+    background: white;
+    border: 1px solid #FF5900;
+    color: #FF5900;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: #999;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .setting-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .setting-sidebar {
+        width: 100%;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- 기존 CSS 하단에 추가해주세요 --- */
+
+/* 차트 컨테이너 */
+.charts-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.chart-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 원형 차트 (CSS Conic Gradient 사용) */
+.pie-chart {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 도넛 모양을 만들기 위한 중앙 가림막 */
+.pie-chart::after {
+    content: "";
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.chart-label {
+    position: absolute;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+
+.chart-title {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 성별 막대 그래프 */
+.gender-bar-container {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.gender-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.gender-bar {
+    display: flex;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #eee;
+}
+
+.gender-male {
+    background-color: #4facfe; /* 파란색 */
+    height: 100%;
+}
+
+.gender-female {
+    background-color: #ff5900; /* 주황색 (브랜드 컬러) */
+    height: 100%;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 320px;
     text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: popIn 0.2s ease-out;
+}
+
+.modal-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.modal-content h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }

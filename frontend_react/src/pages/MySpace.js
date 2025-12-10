@@ -41,16 +41,16 @@ const MySpace = () => {
                         // 폴더 데이터 세팅
                         setFolders(data.folders.map(f => ({
                             ...f,
-                            img: f.thumb, // DB 필드명(thumb) -> 프론트(img) 매핑
+                            img: f.thumb, 
                             link: `/myspace/folder/${f.id}`
                         })));
 
-                        // 궤도 데이터 세팅
+                        // ★ [수정됨] 궤도 데이터 세팅: link를 '/myspace/node'로 변경
                         setOrbitArtworks(data.orbit.map((imgUrl, i) => ({
                             id: i,
                             img: imgUrl,
-                            link: '#',
-                            orbit: i % 2 === 0 ? 'outer' : 'inner', // 단순화를 위해 교차 배치
+                            link: '/myspace/node', // 기존 '#'에서 경로 수정
+                            orbit: i % 2 === 0 ? 'outer' : 'inner', 
                             orientation: i % 2 === 0 ? 'horizontal' : 'vertical'
                         })));
                     }
@@ -102,14 +102,26 @@ const MySpace = () => {
                     <div className="artwork-orbit-area">
                         <div className="orbit orbit-outer">
                             {outerOrbitArtworks.map((art, i) => (
-                                <Link key={i} to={art.link} className={`artwork-item item-${i+1} ${art.orientation}`}>
+                                /* ★ [수정됨] state를 통해 클릭한 작품 정보를 Node 페이지로 전달 */
+                                <Link 
+                                    key={i} 
+                                    to={art.link} 
+                                    state={{ nodeData: art }} 
+                                    className={`artwork-item item-${i+1} ${art.orientation}`}
+                                >
                                     <img src={art.img} alt="art" />
                                 </Link>
                             ))}
                         </div>
                         <div className="orbit orbit-inner">
                             {innerOrbitArtworks.map((art, i) => (
-                                <Link key={i} to={art.link} className={`artwork-item item-${i+5} ${art.orientation}`}>
+                                /* ★ [수정됨] state를 통해 클릭한 작품 정보를 Node 페이지로 전달 */
+                                <Link 
+                                    key={i} 
+                                    to={art.link} 
+                                    state={{ nodeData: art }} 
+                                    className={`artwork-item item-${i+5} ${art.orientation}`}
+                                >
                                     <img src={art.img} alt="art" />
                                 </Link>
                             ))}

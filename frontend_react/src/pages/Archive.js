@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Link, useNavigate } from 'react-router-dom';
 import './Archive.css';
-//ㅇ//
+
 const Archive = () => {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState('내 작품 목록');
@@ -31,6 +31,9 @@ const Archive = () => {
     const handleUploadClick = () => navigate('/upload');
     const handleAiPriceClick = () => alert('AI가 적정 가격을 분석 중입니다...');
     const handleSaveClick = () => alert('작품 정보가 저장되었습니다.');
+    
+    // Setting 페이지로 이동하는 핸들러 추가
+    const handleDashboardClick = () => navigate('/setting');
 
     const renderArtworkGrid = () => (
         <section className="artwork-grid">
@@ -82,30 +85,15 @@ const Archive = () => {
                 {renderArtworkGrid()}
 
                 <section className="new-dashboard-section">
-                    <div className="management-header">
+                    <div className="management-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h2 className="management-title">작품 관리</h2>
+                        {/* 수익 대시보드 확인하기 버튼 추가 */}
+                        <button className="dashboard-check-btn" onClick={handleDashboardClick}>
+                            수익 대시보드 확인하기 &gt;
+                        </button>
                     </div>
 
-                    <div className="top-boxes">
-                        <div className="top-box sales-box">
-                            <div className="box-title">판매 현황</div>
-                            <div className="sales-chart">
-                                <div className="chart-bar" style={{ height: "60%" }}></div>
-                                <div className="chart-bar" style={{ height: "30%" }}></div>
-                                <div className="chart-bar" style={{ height: "100%" }}></div>
-                                <div className="chart-bar" style={{ height: "80%" }}></div>
-                                <div className="chart-bar" style={{ height: "50%" }}></div>
-                            </div>
-                        </div>
-
-                        <div className="top-box revenue-box">
-                            <div className="box-title">수익</div>
-                            <div className="revenue-content">
-                                <div className="revenue-month">11월</div>
-                                <div className="revenue-amount">160000</div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* 기존의 top-boxes (판매현황, 수익) 제거됨 */}
 
                     <div className="artwork-info-section">
                         <h3 className="artwork-info-title">작품 정보</h3>
