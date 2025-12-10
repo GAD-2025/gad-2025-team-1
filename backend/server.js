@@ -14,7 +14,7 @@ app.use(express.json());
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '030422',     // ★비밀번호 확인 필수★
+    password: '4346',     // ★비밀번호 확인 필수★
     database: 'myspace_db', 
     waitForConnections: true,
     connectionLimit: 10,
@@ -254,6 +254,18 @@ app.put('/api/myspace/save', async (req, res) => {
         connection.release();
     }
 });
+// ★ [NEW] 작품 탐색 페이지용 전체 작품 목록 API
+app.get('/api/artworks', async (req, res) => {
+    try {
+        // artworks 테이블의 모든 데이터를 가져옵니다.
+        const [rows] = await pool.query("SELECT * FROM artworks");
+        res.json(rows); // 리액트한테 데이터를 배열 그대로 줍니다.
+    } catch (error) {
+        console.error("작품 목록 로딩 실패:", error);
+        res.status(500).send("서버 에러");
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

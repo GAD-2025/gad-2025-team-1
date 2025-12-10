@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { CartProvider } from './context/CartContext'; // [추가] 저장소 불러오기
 import './App.css';
 
-// 1. 페이지 컴포넌트 불러오기
+// 페이지들
 import Explore from './pages/Explore';
 import MySpace from './pages/MySpace';
 import Archive from './pages/Archive';
@@ -10,49 +11,46 @@ import ArchiveDetail from './pages/ArchiveDetail';
 import Login from './pages/Login';
 import Marketplace from './pages/Marketplace';
 import MarketplaceDetail from './pages/MarketplaceDetail';
+import Cart from './pages/Cart';
 import MySpaceFolder from './pages/MySpaceFolder';
 import MySpaceNode from './pages/MySpaceNode';
 import MySpaceSetting from './pages/MySpaceSetting';
 import Setting from './pages/Setting';
 import SignUp from './pages/SignUp';
-import Upload from './pages/Upload'; // [추가] 업로드 페이지 import
+import Upload from './pages/Upload'; 
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          {/* 2. 주소(path)와 파일(element) 연결 */}
-          
-          {/* 메인 화면 */}
-          <Route path="/" element={<Explore />} />
-          <Route path="/explore" element={<Explore />} />
-          
-          {/* 마이스페이스 관련 */}
-          <Route path="/myspace" element={<MySpace />} />
-          <Route path="/myspace/setting" element={<MySpaceSetting />} />
-          <Route path="/myspace/folder/:id" element={<MySpaceFolder />} />
-          <Route path="/myspace/node" element={<MySpaceNode />} />
+    // [중요] CartProvider로 감싸야 모든 페이지에서 장바구니를 공유합니다.
+    <CartProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Explore />} />
+            <Route path="/explore" element={<Explore />} />
+            
+            <Route path="/myspace" element={<MySpace />} />
+            <Route path="/myspace/setting" element={<MySpaceSetting />} />
+            <Route path="/myspace/folder/:id" element={<MySpaceFolder />} />
+            <Route path="/myspace/node" element={<MySpaceNode />} />
 
-          {/* 마켓플레이스 관련 */}
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/marketplace/detail" element={<MarketplaceDetail />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/marketplace/detail/:id" element={<MarketplaceDetail />} />
+            
+            <Route path="/cart" element={<Cart />} />
 
-          {/* 아카이브 관련 */}
-          <Route path="/archive" element={<Archive />} />
-          <Route path="/archive/detail" element={<ArchiveDetail />} />
+            <Route path="/archive" element={<Archive />} />
+            <Route path="/archive/detail" element={<ArchiveDetail />} />
 
-          {/* [추가] 업로드 페이지 */}
-          <Route path="/upload" element={<Upload />} />
+            <Route path="/upload" element={<Upload />} />
 
-          {/* 설정 및 로그인 */}
-          <Route path="/setting" element={<Setting />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-
-        </Routes>
-      </div>
-    </Router>
+            <Route path="/setting" element={<Setting />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+          </Routes>
+        </div>
+      </Router>
+    </CartProvider>
   );
 }
 

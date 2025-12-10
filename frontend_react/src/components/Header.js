@@ -1,80 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import './Header.css';
+import { useCart } from '../context/CartContext'; // [1] 장바구니 데이터 가져오기
 
 const Header = () => {
+    // [2] Context에서 실시간 장바구니 목록(cartItems) 가져오기
+    const { cartItems } = useCart(); 
+    
+    // 기존 유저 로그인 로직 유지
     const [user, setUser] = useState(null);
     const location = useLocation();
     const navigate = useNavigate();
 
+    // 로그인 세션 체크 (팀원 코드 유지)
     useEffect(() => {
         try {
-            // 세션 스토리지에서 저장된 유저 정보 가져오기
             const storedUser = sessionStorage.getItem('currentUser');
             if (storedUser) {
                 setUser(JSON.parse(storedUser));
             }
         } catch (error) {
-            console.error("Failed to parse user data from sessionStorage", error);
+            console.error("Failed to parse user data", error);
             sessionStorage.removeItem('currentUser');
         }
-    }, [location]); // 페이지가 이동할 때마다 로그인 상태 체크
+    }, [location]);
 
+    // 로그아웃 처리 (팀원 코드 유지)
     const handleLogout = () => {
-        // 로그아웃 처리
         sessionStorage.removeItem('currentUser');
         setUser(null);
         alert('로그아웃되었습니다.');
-        navigate('/'); // 메인으로 이동
+        navigate('/'); 
     };
 
+    // 활성화 메뉴 디자인 함수
     const getLinkClass = (path) => {
-        return location.pathname === path ? 'active' : '';
+        const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+        
+        return isActive 
+            ? "text-white font-bold border-b-2 border-orange-600 pb-1" 
+            : "text-gray-400 hover:text-white transition font-medium"; 
     };
 
     return (
-        <header className="main-header">
-            <div className="header-section header-left">
-                <Link to="/explore" className="header-logo">
-                    <span style={{ color: '#FF5900' }}>creAItive</span>
-                </Link>
-            </div>
+        <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                
+                {/* 1. 로고 */}
+                <div className="flex-shrink-0">
+                    <Link to="/" className="text-2xl font-extrabold text-orange-600 cursor-pointer hover:opacity-80 transition">
+                        creAItive
+                    </Link>
+                </div>
 
-            <nav className="header-section header-center">
-                <ul className="header-menu">
-                    <li><Link to="/marketplace" className={getLinkClass('/marketplace')}>거래하기</Link></li>
-                    <li><Link to="/archive" className={getLinkClass('/archive')}>작품보관함</Link></li>
-                    <li><Link to="/myspace" className={getLinkClass('/myspace')}>마이 스페이스</Link></li>
-                    <li><Link to="/setting" className={getLinkClass('/setting')}>설정</Link></li>
-                </ul>
-            </nav>
+                {/* 2. 네비게이션 메뉴 */}
+                <nav className="hidden md:flex space-x-8">
+                    <Link to="/marketplace" className={getLinkClass('/marketplace')}>거래하기</Link>
+                    <Link to="/archive" className={getLinkClass('/archive')}>작품 보관함</Link>
+                    <Link to="/myspace" className={getLinkClass('/myspace')}>마이스페이스</Link>
+                    <Link to="/setting" className={getLinkClass('/setting')}>설정</Link>
+                </nav>
 
-            <div className="header-section header-right">
-                {user ? (
-                    // ★ 로그인 했을 때: 이름과 로그아웃 버튼을 따로 표시
-                    <div className="user-profile-widget" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <span className="widget-user-name" style={{ fontWeight: 'bold', color: '#333' }}>
-                            {user.nickname}님
-                        </span>
-                        <button 
-                            onClick={handleLogout} 
-                            style={{
-                                background: 'none',
-                                border: '1px solid #ddd',
-                                padding: '5px 10px',
-                                borderRadius: '15px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                color: '#666'
-                            }}
-                        >
-                            로그아웃
-                        </button>
-                    </div>
-                ) : (
-                    // ★ 로그인 안 했을 때
-                    <Link to="/login" className="login-button">로그인</Link>
-                )}
+                {/* 3. 우측 아이콘 및 로그인/로그아웃 */}
+                <div className="flex items-center space-x-6">
+                    
+                    {/* [수정됨] 장바구니 아이콘: 링크 연결 및 실시간 개수 표시 */}
+                    <Link to="/cart">
+                        <div className="relative cursor-pointer group" title="장바구니">
+                            <span className="text-2xl text-gray-400 group-hover:text-white transition">🛒</span>
+                            
+                            {/* 장바구니에 담긴 개수 (Context 데이터 반영) */}
+                            {cartItems.length > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-bounce">
+                                    {cartItems.length}
+                                </span>
+                            )}
+                        </div>
+                    </Link>
+
+                    {/* 로그인 상태에 따른 버튼 표시 */}
+                    {user ? (
+                        <div className="flex items-center gap-4">
+                            <span className="text-white text-sm font-bold">
+                                {user.nickname}님
+                            </span>
+                            <button 
+                                onClick={handleLogout} 
+                                className="text-xs text-gray-400 border border-gray-600 px-3 py-1.5 rounded-full hover:bg-gray-800 hover:text-white transition"
+                            >
+                                로그아웃
+                            </button>
+                        </div>
+                    ) : (
+                        <Link to="/login">
+                            <button className="bg-orange-600 text-white px-5 py-2 font-bold rounded-lg text-sm hover:bg-orange-700 transition">
+                                로그인
+                            </button>
+                        </Link>
+                    )}
+                </div>
             </div>
         </header>
     );

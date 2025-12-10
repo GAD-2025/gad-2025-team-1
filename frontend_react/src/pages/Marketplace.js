@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import { useCart } from '../context/CartContext'; // [1] Context Hook 불러오기
 
 const Marketplace = () => {
-    // [1] Mock Data: 60개 생성
+    // [2] 장바구니 기능 및 네비게이션 가져오기
+    const { addToCart, removeFromCart, isInCart } = useCart();
+    const navigate = useNavigate();
+
+    // ----------------------------------------------------------------------
+    // [3] Mock Data 생성 (기존 코드 유지)
+    // ----------------------------------------------------------------------
     const imageCollection = [
         "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&q=80",
         "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=600&q=80",
@@ -68,9 +75,9 @@ const Marketplace = () => {
 
     const [initialArtworks] = useState(generateData());
 
-    // [2] 상태 관리
-    const [artworks] = useState(initialArtworks);
-    const [filteredArtworks, setFilteredArtworks] = useState(initialArtworks);
+    // [4] 상태 관리
+    const [artworks] = useState(initialArtworks); // 원본 데이터
+    const [filteredArtworks, setFilteredArtworks] = useState(initialArtworks); // 필터링된 데이터
     
     // 필터 상태
     const [searchTerm, setSearchTerm] = useState('');
@@ -85,7 +92,26 @@ const Marketplace = () => {
 
     const categories = ['All', '일러스트', '컨셉아트', '어플 디자인', '마케팅 배너'];
 
-    // [3] 필터 로직
+    // [5] 찜하기(하트) 버튼 클릭 핸들러 (수정됨)
+    const handleHeartClick = (e, art) => {
+        e.preventDefault(); // 중요: 상세 페이지 이동 방지
+
+        if (isInCart(art.id)) {
+            // 이미 장바구니에 있다면 -> 제거 (빈 하트로 변경)
+            removeFromCart(art.id);
+        } else {
+            // 장바구니에 없다면 -> 추가 (꽉 찬 하트로 변경) & 팝업 띄우기
+            addToCart(art);
+            const move = window.confirm("장바구니에 담겼습니다!\n장바구니로 이동하시겠습니까?");
+            
+            if (move) {
+                navigate('/cart'); // 확인 누르면 이동
+            }
+            // 취소 누르면 현재 페이지 유지 (하트는 꽉 찬 상태)
+        }
+    };
+
+    // [6] 통합 필터링 로직
     useEffect(() => {
         let result = [...artworks];
 
@@ -111,9 +137,14 @@ const Marketplace = () => {
         }
 
         setFilteredArtworks(result);
-        setCurrentPage(1); 
-    }, [searchTerm, selectedCategory, sortCriteria, minPrice, maxPrice, artworks]);
+        
+        // 페이지 범위 넘어가면 1페이지로 리셋
+        if (currentPage > Math.ceil(result.length / itemsPerPage)) {
+            setCurrentPage(1);
+        }
+    }, [searchTerm, selectedCategory, sortCriteria, minPrice, maxPrice, artworks, currentPage]);
 
+    // 현재 페이지 데이터 계산
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredArtworks.slice(indexOfFirstItem, indexOfLastItem);
@@ -121,12 +152,12 @@ const Marketplace = () => {
 
     return (
         <div className="min-h-screen bg-black text-gray-300 font-sans relative pb-20">
-            {/* [변경됨] 배경: 어두운 밤하늘 스타일로 변경 */}
+            {/* 배경 */}
             <div className="fixed inset-0 z-0 opacity-80 bg-cover bg-center pointer-events-none" 
                  style={{backgroundImage: "url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=2013&auto=format&fit=crop')"}}>
             </div>
 
-            {/* [변경됨] 헤더 디자인 통일 (검은색 배경 + 주황색 버튼) */}
+            {/* 공통 헤더 */}
             <Header />
             
             <main className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -245,39 +276,56 @@ const Marketplace = () => {
                         {/* 4열 그리드 */}
                         <div className="grid grid-cols-4 gap-5">
                             {currentItems.length > 0 ? (
-                                currentItems.map(art => (
-                                    <Link to={`/marketplace/detail/${art.id}`} key={art.id} className="group block bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-gray-500 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                        <div className="aspect-square w-full relative overflow-hidden bg-gray-800">
-                                            <img 
-                                                src={art.img} 
-                                                alt={art.title} 
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                loading="lazy"
-                                            />
-                                            {art.badge && (
-                                                <span className="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
-                                                    {art.badge}
+                                currentItems.map(art => {
+                                    // [7] 핵심: 현재 작품이 장바구니에 있는지 확인
+                                    const isAdded = isInCart(art.id);
+
+                                    return (
+                                        <Link to={`/marketplace/detail/${art.id}`} key={art.id} className="group block bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-gray-500 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative">
+                                            <div className="aspect-square w-full relative overflow-hidden bg-gray-800">
+                                                <img 
+                                                    src={art.img} 
+                                                    alt={art.title} 
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    loading="lazy"
+                                                />
+                                                
+                                                {/* [찜하기 버튼] 하트 상태를 isAdded에 따라 변경 */}
+                                                <button 
+                                                    onClick={(e) => handleHeartClick(e, art)}
+                                                    className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-black/40 backdrop-blur-md hover:bg-white/20 transition border border-white/10"
+                                                >
+                                                    <span className={`text-lg ${isAdded ? "text-red-500" : "text-white"}`}>
+                                                        {isAdded ? "♥" : "♡"}
+                                                    </span>
+                                                </button>
+
+                                                {art.badge && (
+                                                    <span className="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                                                        {art.badge}
+                                                    </span>
+                                                )}
+                                                <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur text-gray-300 text-[9px] px-1.5 py-0.5 rounded border border-gray-600">
+                                                    {art.aiModel}
                                                 </span>
-                                            )}
-                                            <span className="absolute top-2 right-2 bg-black/60 backdrop-blur text-gray-300 text-[9px] px-1.5 py-0.5 rounded border border-gray-600">
-                                                {art.aiModel}
-                                            </span>
-                                        </div>
-                                        <div className="p-3">
-                                            <h3 className="text-white font-bold text-sm truncate mb-1">{art.title}</h3>
-                                            <div className="flex items-center gap-1.5 mb-2">
-                                                <img src={art.authorImg} alt="" className="w-4 h-4 rounded-full border border-gray-600" />
-                                                <span className="text-gray-400 text-xs truncate">{art.author}</span>
                                             </div>
-                                            <div className="flex justify-between items-center border-t border-gray-700 pt-2 mt-2">
-                                                <span className="text-orange-500 font-bold text-sm">{art.price.toLocaleString()} C</span>
-                                                <div className="flex items-center text-[10px] text-gray-500 gap-1">
-                                                    <span>♥ {art.likes}</span>
+                                            <div className="p-3">
+                                                <h3 className="text-white font-bold text-sm truncate mb-1">{art.title}</h3>
+                                                <div className="flex items-center gap-1.5 mb-2">
+                                                    <img src={art.authorImg} alt="" className="w-4 h-4 rounded-full border border-gray-600" />
+                                                    <span className="text-gray-400 text-xs truncate">{art.author}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center border-t border-gray-700 pt-2 mt-2">
+                                                    <span className="text-orange-500 font-bold text-sm">{art.price.toLocaleString()} C</span>
+                                                    <div className="flex items-center text-[10px] text-gray-500 gap-1">
+                                                        {/* 찜 개수: 찜 상태면 +1 표시 */}
+                                                        <span>♥ {art.likes + (isAdded ? 1 : 0)}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </Link>
-                                ))
+                                        </Link>
+                                    );
+                                })
                             ) : (
                                 <div className="col-span-full py-20 text-center bg-gray-900/50 rounded-xl border border-dashed border-gray-800">
                                     <p className="text-gray-400">조건에 맞는 작품이 없습니다.</p>

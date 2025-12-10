@@ -1,70 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Header from '../components/Header';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext'; // 경로가 맞는지 꼭 확인해주세요
 
 const Explore = () => {
-    // [1] 이미지 컬렉션 (30개의 고화질 우주/AI 아트)
-    const imageCollection = [
-        "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&q=80",
-        "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=600&q=80",
-        "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&q=80",
-        "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=80",
-        "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=600&q=80",
-        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=80", 
-        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80",
-        "https://images.unsplash.com/photo-1484589065579-248aad0d8b13?w=600&q=80",
-        "https://images.unsplash.com/photo-1465101162946-4377e57745c3?w=600&q=80", 
-        "https://images.unsplash.com/photo-1534293630900-a3528f80cb32?w=600&q=80",
-        "https://images.unsplash.com/photo-1633412802994-5c058f151b66?w=600&q=80",
-        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
-        "https://images.unsplash.com/photo-1614726365206-38536b2d2940?w=600&q=80",
-        "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?w=600&q=80",
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80",
-        "https://images.unsplash.com/photo-1578374173705-969cbe23210a?w=600&q=80",
-        "https://images.unsplash.com/photo-1563089145-599997674d42?w=600&q=80",
-        "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=80",
-        "https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?w=600&q=80",
-        "https://images.unsplash.com/photo-1520034475321-cbe63696469a?w=600&q=80",
-        "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=600&q=80",
-        "https://images.unsplash.com/photo-1536697246787-1d76314a7b62?w=600&q=80",
-        "https://images.unsplash.com/photo-1496337589254-7e19d01cec44?w=600&q=80",
-        "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=600&q=80",
-        "https://images.unsplash.com/photo-1605806616949-1e87b487bc2a?w=600&q=80",
-        "https://images.unsplash.com/photo-1529641484336-efd5172d8dc1?w=600&q=80",
-        "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=600&q=80",
-        "https://images.unsplash.com/photo-1507608869274-2c33ee180888?w=600&q=80",
-        "https://images.unsplash.com/photo-1604871000636-074fa5117945?w=600&q=80",
-        "https://images.unsplash.com/photo-1563205764-647729d39002?w=600&q=80",
-    ];
+    // [1] 장바구니 Context 및 네비게이션 훅 사용
+    const { addToCart, removeFromCart, isInCart, cartItems } = useCart();
+    const navigate = useNavigate();
 
-    // [2] 데이터 생성 함수 (이미지 랜덤 배정)
-    const generateData = () => {
-        const data = [];
-        const categories = ['이미지 생성', '어플 디자인', '마케팅 배너', '일러스트'];
-        
-        for (let i = 1; i <= 40; i++) { // 40개 데이터
-            data.push({
-                id: i,
-                title: `Cosmic Art #${i}`,
-                author: `Creator_${i}`,
-                tags: ["자연", "우주", "AI"],
-                category: categories[i % 4],
-                price: `${Math.floor(Math.random() * 5000)}C`,
-                priceValue: Math.floor(Math.random() * 5000),
-                date: `2025-11-${String((i % 30) + 1).padStart(2, '0')}`,
-                views: Math.floor(Math.random() * 1000),
-                liked: false,
-                // 이미지 순차 배정
-                img: imageCollection[(i - 1) % imageCollection.length],
-                color: "#1a1a1a" // 기본 배경색 (이미지 로딩 전)
-            });
-        }
-        return data;
-    };
-
-    // [3] 상태 관리
-    const [artworks, setArtworks] = useState([]); // 초기값 비워두고 useEffect에서 설정
-    const [filteredData, setFilteredData] = useState([]);
+    // ----------------------------------------------------------------------
+    // 상태 관리 (데이터, 필터, UI)
+    // ----------------------------------------------------------------------
+    const [artworks, setArtworks] = useState([]); // 전체 데이터
+    const [filteredData, setFilteredData] = useState([]); // 필터링된 데이터
     
     // 필터 상태
     const [keyword, setKeyword] = useState("");
@@ -73,57 +20,94 @@ const Explore = () => {
     const [sortOrder, setSortOrder] = useState("relevance");
     const [showLikedOnly, setShowLikedOnly] = useState(false);
     
-    // 페이지네이션
+    // 페이지네이션 및 UI 상태
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8; // 탐색 페이지는 크게 보여주기 위해 8개 유지 (원하시면 늘려드립니다)
-
-    // UI 상태
+    const itemsPerPage = 8;
     const [selectedArtwork, setSelectedArtwork] = useState(null);
     const [loading, setLoading] = useState(false);
     const [recentSearches, setRecentSearches] = useState([]);
     const [showRecentDropdown, setShowRecentDropdown] = useState(false);
 
-    // [4] 초기 로드 (데이터 생성)
+    // ----------------------------------------------------------------------
+    // [핵심] 서버(Port 5000)에서 데이터 가져오기
+    // ----------------------------------------------------------------------
     useEffect(() => {
-        const data = generateData();
-        setArtworks(data);
-        
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // ❗ 포트 번호를 5000으로 수정했습니다.
+                const response = await fetch('http://localhost:5000/api/artworks');
+                
+                if (!response.ok) {
+                    throw new Error('서버 연결 실패');
+                }
+
+                const dbData = await response.json();
+
+                // DB 데이터 컬럼명(image_url 등)을 프론트엔드 변수명(img 등)으로 매칭
+                const formattedData = dbData.map(item => ({
+                    ...item,
+                    img: item.image_url,       // DB: image_url -> Front: img
+                    author: item.artist_name,  // DB: artist_name -> Front: author
+                    priceValue: item.price,    // 정렬용 숫자 가격
+                    price: `${item.price}C`,   // 표시용 문자열 가격
+                    // DB에 태그/색상 컬럼이 없으므로 임시 값 부여 (에러 방지)
+                    tags: ["AI", "Art", "Digital"], 
+                    color: "#1a1a1a"
+                }));
+
+                setArtworks(formattedData);
+                setFilteredData(formattedData); // 초기 데이터 설정
+            } catch (error) {
+                console.error("데이터를 불러오지 못했습니다:", error);
+                alert("서버와 연결할 수 없습니다. 백엔드 서버(Port 5000)가 켜져 있는지 확인해주세요!");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+
+        // 최근 검색어 로드
         const savedSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
         setRecentSearches(savedSearches);
     }, []);
 
-    // 데이터가 로드되면 필터링 실행
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // ----------------------------------------------------------------------
+    // 필터링 로직 (DB에서 받아온 데이터를 기반으로 작동)
+    // ----------------------------------------------------------------------
     useEffect(() => {
-        if(artworks.length > 0) applyFilters();
-    }, [artworks, category, priceLevel, sortOrder, showLikedOnly]); 
+        if(artworks.length === 0) return;
 
-    // [5] 필터링 로직
-    const applyFilters = () => {
         setLoading(true);
-
         setTimeout(() => {
             let result = artworks.filter(item => {
+                // 검색어 필터
                 const matchQuery = item.title.toLowerCase().includes(keyword.toLowerCase()) || 
                                    item.author.toLowerCase().includes(keyword.toLowerCase()) ||
-                                   item.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()));
+                                   (item.tags && item.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase())));
+                
+                // 카테고리 필터
                 const matchCategory = category === 'all' || item.category === category;
                 
+                // 가격 필터
                 let matchPrice = true;
                 if (priceLevel === 'free') matchPrice = item.priceValue === 0;
                 else if (priceLevel === 'low') matchPrice = item.priceValue > 0 && item.priceValue <= 100;
                 else if (priceLevel === 'mid') matchPrice = item.priceValue > 100 && item.priceValue <= 300;
                 else if (priceLevel === 'high') matchPrice = item.priceValue > 300;
                 
-                const matchLiked = showLikedOnly ? item.liked : true;
+                // 찜한 작품 필터 (Context 연동)
+                const matchLiked = showLikedOnly ? isInCart(item.id) : true;
 
                 return matchQuery && matchCategory && matchPrice && matchLiked;
             });
 
+            // 정렬 로직
             if (sortOrder === 'latest') {
-                result.sort((a, b) => new Date(b.date) - new Date(a.date));
+                result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
             } else if (sortOrder === 'popular') {
-                result.sort((a, b) => b.views - a.views);
+                result.sort((a, b) => (b.views || 0) - (a.views || 0));
             } else if (sortOrder === 'price_asc') {
                 result.sort((a, b) => a.priceValue - b.priceValue);
             }
@@ -131,9 +115,10 @@ const Explore = () => {
             setFilteredData(result);
             setCurrentPage(1);
             setLoading(false);
-        }, 500);
-    };
+        }, 300);
+    }, [artworks, category, priceLevel, sortOrder, showLikedOnly, cartItems, keyword]);
 
+    // 검색 핸들러
     const handleSearch = () => {
         if (!keyword.trim()) {
             alert("검색어를 입력해주세요.");
@@ -142,46 +127,89 @@ const Explore = () => {
         const newSearches = [keyword, ...recentSearches.filter(k => k !== keyword)].slice(0, 3);
         setRecentSearches(newSearches);
         localStorage.setItem('recentSearches', JSON.stringify(newSearches));
-        
         setShowRecentDropdown(false);
-        applyFilters();
     };
 
     const handleTagClick = (tag) => {
         setKeyword(tag.replace('#', ''));
     };
 
-    const toggleLike = (e, id) => {
+    // 하트(찜하기) 버튼 핸들러
+    const handleHeartClick = (e, item) => {
         e.stopPropagation();
-        const newArtworks = artworks.map(item => 
-            item.id === id ? { ...item, liked: !item.liked } : item
-        );
-        setArtworks(newArtworks); // artworks가 바뀌면 useEffect에 의해 applyFilters가 자동 실행됨
+        if (isInCart(item.id)) {
+            removeFromCart(item.id);
+        } else {
+            addToCart(item);
+            if (window.confirm("장바구니에 담겼습니다!\n장바구니로 이동하시겠습니까?")) {
+                navigate('/cart');
+            }
+        }
     };
 
-    const addToCart = () => {
+    // 모달 내부 장바구니 핸들러
+    const handleModalAddToCart = () => {
         if (!selectedArtwork) return;
-        // The original implementation had a cart state, but this is now managed by the Header component.
-        alert(`🛒 '${selectedArtwork.title}' 장바구니에 담김!`);
+        if (isInCart(selectedArtwork.id)) {
+            if (window.confirm("이미 장바구니에 있는 작품입니다.\n장바구니에서 확인하시겠습니까?")) {
+                navigate('/cart');
+            }
+        } else {
+            addToCart(selectedArtwork);
+            if (window.confirm("장바구니에 담겼습니다!\n장바구니로 이동하시겠습니까?")) {
+                navigate('/cart');
+            }
+        }
     };
 
-    const displayedItems = filteredData.slice(0, currentPage * itemsPerPage);
+    const handleModalBuy = () => {
+        alert("구매 완료 되었습니다!");
+    };
 
+    // 신규 아이콘 로직 (최근 30일 이내)
     const isNew = (dateString) => {
+        if (!dateString) return false;
         const date = new Date(dateString);
-        const now = new Date('2024-11-26');
+        const now = new Date();
         return Math.ceil(Math.abs(now - date) / (1000 * 60 * 60 * 24)) <= 30;
     };
 
+    // 화면 표시용 데이터 슬라이싱
+    const displayedItems = filteredData.slice(0, currentPage * itemsPerPage);
+
     return (
         <div className="min-h-screen bg-black text-gray-300 font-sans relative">
-            {/* [변경됨] 배경: Marketplace와 동일한 어두운 밤하늘 */}
             <div className="fixed inset-0 z-0 opacity-80 bg-cover bg-center pointer-events-none" 
-                 style={{backgroundImage: "url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=2013&auto=format&fit=crop')"}}>
-            </div>
+                 style={{backgroundImage: "url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=2013&auto=format&fit=crop')"}}></div>
 
-            {/* [변경됨] 헤더 디자인 통일 */}
-            <Header />
+            {/* 헤더 */}
+            <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                    <Link to="/" className="text-2xl font-extrabold text-orange-600 cursor-pointer hover:opacity-80 transition">
+                        creAItive
+                    </Link>
+
+                    <nav className="hidden md:flex space-x-8">
+                        <Link to="/marketplace" className="text-gray-400 hover:text-white transition font-medium">거래하기</Link>
+                        <Link to="/archive" className="text-gray-400 hover:text-white transition font-medium">작품 보관함</Link>
+                        <Link to="/myspace" className="text-gray-400 hover:text-white transition font-medium">마이스페이스</Link>
+                        <Link to="/setting" className="text-gray-400 hover:text-white transition font-medium">설정</Link>
+                    </nav>
+
+                    <div className="flex items-center space-x-6">
+                        {/* 장바구니 아이콘 */}
+                        <div className="relative cursor-pointer group" onClick={() => navigate('/cart')} title="장바구니">
+                            <span className="text-2xl text-gray-400 group-hover:text-white transition">🛒</span>
+                            {cartItems.length > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                    {cartItems.length}
+                                </span>
+                            )}
+                        </div>
+                        <button className="bg-orange-600 text-white px-5 py-2 font-bold rounded-lg text-sm hover:bg-orange-700 transition">로그인</button>
+                    </div>
+                </div>
+            </header>
 
             <main className="relative z-10 max-w-7xl mx-auto px-4 py-10">
                 {/* 검색 섹션 */}
@@ -261,7 +289,7 @@ const Explore = () => {
                     </div>
                 </div>
 
-                {/* 결과 그리드 (이미지 적용됨) */}
+                {/* 작품 목록 그리드 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (
@@ -269,55 +297,58 @@ const Explore = () => {
                         ))
                     ) : (
                         displayedItems.length > 0 ? (
-                            displayedItems.map(item => (
-                                <div key={item.id} className="group relative rounded-xl overflow-hidden cursor-pointer bg-gray-900 border border-gray-800 hover:shadow-2xl hover:scale-[1.02] hover:border-gray-600 transition duration-300">
-                                    
-                                    {/* 이미지 썸네일 */}
-                                    <div className="h-48 relative overflow-hidden" onClick={() => setSelectedArtwork(item)}>
-                                        <img 
-                                            src={item.img} 
-                                            alt={item.title} 
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            loading="lazy"
-                                        />
-                                        
-                                        <div className="absolute top-0 left-0 w-full flex justify-between items-start p-3 z-10">
-                                            <span className="text-[10px] bg-black/60 text-white px-2 py-1 rounded backdrop-blur-md border border-white/20">{item.category}</span>
-                                            {isNew(item.date) && <span className="text-[10px] font-bold bg-orange-600 text-white px-2 py-0.5 rounded shadow">NEW</span>}
-                                        </div>
-                                        
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                            <span className="bg-white/90 text-black px-4 py-2 rounded-full text-sm font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition">상세보기</span>
-                                        </div>
-                                    </div>
+                            displayedItems.map(item => {
+                                const isAdded = isInCart(item.id);
 
-                                    {/* 하트 버튼 */}
-                                    <button onClick={(e) => toggleLike(e, item.id)} className="absolute top-40 right-3 z-20 p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-white/20 transition border border-white/10">
-                                        <span className={`text-xl ${item.liked ? "text-red-500" : "text-white"}`}>
-                                            {item.liked ? "♥" : "♡"}
-                                        </span>
-                                    </button>
-
-                                    {/* 하단 정보 */}
-                                    <div className="p-4" onClick={() => setSelectedArtwork(item)}>
-                                        <h3 className="text-white font-bold text-lg truncate mb-1">{item.title}</h3>
-                                        <p className="text-xs text-gray-400 mb-3">by {item.author}</p>
-                                        <div className="flex justify-between items-center border-t border-gray-800 pt-3">
-                                            <div className="flex gap-1">
-                                                {item.tags.slice(0, 2).map(tag => <span key={tag} className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded">#{tag}</span>)}
+                                return (
+                                    <div key={item.id} className="group relative rounded-xl overflow-hidden cursor-pointer bg-gray-900 border border-gray-800 hover:shadow-2xl hover:scale-[1.02] hover:border-gray-600 transition duration-300">
+                                        <div className="h-48 relative overflow-hidden" onClick={() => setSelectedArtwork(item)}>
+                                            <img 
+                                                src={item.img} 
+                                                alt={item.title} 
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                loading="lazy"
+                                            />
+                                            <div className="absolute top-0 left-0 w-full flex justify-between items-start p-3 z-10">
+                                                <span className="text-[10px] bg-black/60 text-white px-2 py-1 rounded backdrop-blur-md border border-white/20">{item.category}</span>
+                                                {isNew(item.created_at) && <span className="text-[10px] font-bold bg-orange-600 text-white px-2 py-0.5 rounded shadow">NEW</span>}
                                             </div>
-                                            <span className="text-orange-500 font-bold text-lg">{item.price}</span>
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                <span className="bg-white/90 text-black px-4 py-2 rounded-full text-sm font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition">상세보기</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <button 
+                                            onClick={(e) => handleHeartClick(e, item)} 
+                                            className="absolute top-40 right-3 z-20 p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-white/20 transition border border-white/10"
+                                        >
+                                            <span className={`text-xl transition-colors duration-300 ${isAdded ? "text-red-500" : "text-white"}`}>
+                                                {isAdded ? "♥" : "♡"}
+                                            </span>
+                                        </button>
+
+                                        <div className="p-4" onClick={() => setSelectedArtwork(item)}>
+                                            <h3 className="text-white font-bold text-lg truncate mb-1">{item.title}</h3>
+                                            <p className="text-xs text-gray-400 mb-3">by {item.author}</p>
+                                            <div className="flex justify-between items-center border-t border-gray-800 pt-3">
+                                                <div className="flex gap-1">
+                                                    {item.tags.slice(0, 2).map(tag => <span key={tag} className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded">#{tag}</span>)}
+                                                </div>
+                                                <span className="text-orange-500 font-bold text-lg">{item.price}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
-                            <div className="col-span-full text-center py-20 text-gray-500">조건에 맞는 작품이 없습니다.</div>
+                            <div className="col-span-full text-center py-20 text-gray-500">
+                                <p>조건에 맞는 작품이 없습니다.</p>
+                                {artworks.length === 0 && <p className="text-sm mt-2 text-red-400">※ 서버가 켜져 있는지 확인해주세요!</p>}
+                            </div>
                         )
                     )}
                 </div>
 
-                {/* 더 보기 */}
                 {!loading && displayedItems.length < filteredData.length && (
                     <div className="text-center mt-12">
                         <button onClick={() => setCurrentPage(prev => prev + 1)} className="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-full border border-gray-700 transition">
@@ -335,7 +366,6 @@ const Explore = () => {
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                         
-                        {/* 모달 이미지 */}
                         <div className="w-full md:w-1/2 aspect-square rounded-xl overflow-hidden bg-black flex items-center justify-center">
                             <img src={selectedArtwork.img} alt={selectedArtwork.title} className="w-full h-full object-cover" />
                         </div>
@@ -349,7 +379,7 @@ const Explore = () => {
                                     By {selectedArtwork.author}
                                 </p>
                                 <div className="py-6 border-y border-gray-800 text-sm text-gray-300 leading-relaxed">
-                                    이 작품은 AI 알고리즘을 통해 생성된 독창적인 디지털 아트워크입니다. 우주의 신비로움과 기술의 조화를 표현하고 있습니다. 구매 시 고해상도 원본 파일을 다운로드할 수 있습니다.
+                                    {selectedArtwork.description || "이 작품은 AI 알고리즘을 통해 생성된 독창적인 디지털 아트워크입니다. 우주의 신비로움과 기술의 조화를 표현하고 있습니다."}
                                 </div>
                             </div>
                             <div className="mt-6">
@@ -358,8 +388,18 @@ const Explore = () => {
                                     <span className="text-3xl font-bold text-orange-500">{selectedArtwork.price}</span>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button onClick={addToCart} className="flex-1 py-3.5 border border-gray-600 rounded-xl font-bold hover:bg-gray-800 transition">장바구니</button>
-                                    <button className="flex-[1.5] py-3.5 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 shadow-lg shadow-orange-900/20 transition">구매하기</button>
+                                    <button 
+                                        onClick={handleModalAddToCart} 
+                                        className={`flex-1 py-3.5 border rounded-xl font-bold transition ${isInCart(selectedArtwork.id) ? 'border-red-500 text-red-500 hover:bg-red-500/10' : 'border-gray-600 hover:bg-gray-800 text-white'}`}
+                                    >
+                                        {isInCart(selectedArtwork.id) ? '장바구니 확인' : '장바구니 담기'}
+                                    </button>
+                                    <button 
+                                        onClick={handleModalBuy} 
+                                        className="flex-[1.5] py-3.5 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 shadow-lg shadow-orange-900/20 transition"
+                                    >
+                                        구매하기
+                                    </button>
                                 </div>
                             </div>
                         </div>
