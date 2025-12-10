@@ -23,6 +23,7 @@
     left: 0;
     width: 100%;
     height: 100%;
+    /* 이미지 경로가 없다면 배경색만 표시됩니다 */
     background-image: url('../assets/space_background.jpg');
     background-size: cover;
     background-repeat: no-repeat;
@@ -672,6 +673,25 @@
     box-shadow: 0 5px 15px rgba(255, 85, 0, 0.3);
 }
 
+.save-button {
+    width: 100%;
+    padding: 15px;
+    background: #FF5500;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.save-button:hover {
+    background: #e64c00;
+    box-shadow: 0 5px 15px rgba(255, 85, 0, 0.4);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .top-boxes {
@@ -712,4 +732,25 @@
     .ai-price-button {
         width: 100%;
     }
+}
+
+/* 추가: 대시보드 확인 버튼 스타일 (다크/오렌지 테마 적용) */
+.dashboard-check-btn {
+    padding: 10px 24px;
+    background: linear-gradient(45deg, #FF5500, #FF7F50);
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-left: auto;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.dashboard-check-btn:hover {
+    background: linear-gradient(45deg, #e64a00, #e66b3d);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 85, 0, 0.4);
 }
