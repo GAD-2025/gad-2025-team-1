@@ -40,7 +40,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
 
             <Route path="/archive" element={<Archive />} />
-            <Route path="/archive/detail" element={<ArchiveDetail />} />
+            <Route path="/archive/detail/:id" element={<ArchiveDetail />} />
 
             <Route path="/upload" element={<Upload />} />
 
