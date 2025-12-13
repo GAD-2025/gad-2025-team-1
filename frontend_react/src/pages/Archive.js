@@ -6,7 +6,7 @@ import './Archive.css';
 const Archive = () => {
     const navigate = useNavigate();
     
-    // 상태 관리 (기존 코드 유지)
+    // 상태 관리
     const [activeFilter, setActiveFilter] = useState('내 작품 목록');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeKeyword, setActiveKeyword] = useState('일러스트');
@@ -17,7 +17,7 @@ const Archive = () => {
     const [serverArtworks, setServerArtworks] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // [1] 더미 데이터 (하단 작품 관리 섹션용 - 삭제 안 함!)
+    // [1] 더미 데이터 (하단 작품 관리 섹션용 - 디자인 유지)
     const imageList = [
         { id: 1, label: "픽셀의 경계", src: "https://picsum.photos/60/60?random=1" },
         { id: 2, label: "동화의 꽃", src: "https://picsum.photos/60/60?random=2" },
@@ -31,28 +31,29 @@ const Archive = () => {
     const handleSaveClick = () => alert('작품 정보가 저장되었습니다.');
     const handleDashboardClick = () => navigate('/setting');
 
-    // [2] 서버에서 내 구매 목록 가져오기 (상단 그리드용)
+    // [2] 서버에서 내 인벤토리 가져오기
     useEffect(() => {
         const fetchInventory = async () => {
             const userId = localStorage.getItem('userId') || 'admin';
             try {
                 const response = await fetch(`http://localhost:5000/api/inventory/${userId}`);
                 const data = await response.json();
+                
                 if (data.success) {
                     const formatted = data.inventory.map(item => ({
                         id: item.id,
                         title: item.title,
-                        artist: item.artist_name || 'Unknown',
-                        date: '2025.10.01', // 임시 날짜
-                        modified: '2025.10.04',
+                        artist: item.artist_name || 'Unknown', 
+                        date: new Date().toLocaleDateString(),
+                        modified: '-',
                         badge: item.type === 'liked' ? '찜' : '소유 중',
                         img: item.image_url,
-                        type: item.type // purchased or liked
+                        type: item.type // 'purchased' or 'liked'
                     }));
                     setServerArtworks(formatted);
                 }
             } catch (err) {
-                console.error(err);
+                console.error("인벤토리 로딩 실패:", err);
             } finally {
                 setLoading(false);
             }
@@ -60,15 +61,14 @@ const Archive = () => {
         fetchInventory();
     }, []);
 
-    // 필터링 (구매한 것만 보기)
+    // 필터링: '내 작품 목록' 탭에서는 구매한(purchased) 작품만 보여줌
     const displayArtworks = serverArtworks.filter(art => {
         const matchSearch = art.title.toLowerCase().includes(searchTerm.toLowerCase());
-        // 구매 탭이면 type이 purchased인 것만, 아니면 다 보여주기
         const matchType = activeFilter === '내 작품 목록' ? art.type === 'purchased' : true;
         return matchSearch && matchType;
     });
 
-    // [3] 그리드 렌더링 (서버 데이터 기반)
+    // [3] 그리드 렌더링
     const renderArtworkGrid = () => (
         <section className="artwork-grid">
             {loading ? (
@@ -81,7 +81,7 @@ const Archive = () => {
                             <p className="item-title">{art.title}</p>
                             <p className="item-artist">{art.artist}</p>
                             <p className="item-date">{art.date}</p>
-                            <span className="item-badge" style={{color: '#ff6b00'}}>{art.badge}</span>
+                            <span className="item-badge" style={{color: '#ff6b00', fontWeight:'bold'}}>{art.badge}</span>
                         </div>
                     </div>
                 ))
@@ -121,10 +121,9 @@ const Archive = () => {
                     </div>
                 </div>
 
-                {/* 상단: 서버 데이터 그리드 */}
                 {renderArtworkGrid()}
 
-                {/* 하단: 작품 관리 섹션 (복구됨!) */}
+                {/* 하단 작품 관리 섹션 */}
                 <section className="new-dashboard-section">
                     <div className="management-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h2 className="management-title">작품 관리</h2>
