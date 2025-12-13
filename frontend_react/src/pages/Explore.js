@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext'; // 경로가 맞는지 꼭 확인해주세요
+import { useCart } from '../context/CartContext'; 
 
 const Explore = () => {
     // [1] 장바구니 Context 및 네비게이션 훅 사용
@@ -8,10 +8,10 @@ const Explore = () => {
     const navigate = useNavigate();
 
     // ----------------------------------------------------------------------
-    // 상태 관리 (데이터, 필터, UI)
+    // 상태 관리
     // ----------------------------------------------------------------------
-    const [artworks, setArtworks] = useState([]); // 전체 데이터
-    const [filteredData, setFilteredData] = useState([]); // 필터링된 데이터
+    const [artworks, setArtworks] = useState([]); 
+    const [filteredData, setFilteredData] = useState([]); 
     
     // 필터 상태
     const [keyword, setKeyword] = useState("");
@@ -20,7 +20,7 @@ const Explore = () => {
     const [sortOrder, setSortOrder] = useState("relevance");
     const [showLikedOnly, setShowLikedOnly] = useState(false);
     
-    // 페이지네이션 및 UI 상태
+    // UI 상태
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
     const [selectedArtwork, setSelectedArtwork] = useState(null);
@@ -29,13 +29,13 @@ const Explore = () => {
     const [showRecentDropdown, setShowRecentDropdown] = useState(false);
 
     // ----------------------------------------------------------------------
-    // [핵심] 서버(Port 5000)에서 데이터 가져오기
+    // 1. 서버에서 데이터 가져오기
     // ----------------------------------------------------------------------
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // ❗ 포트 번호를 5000으로 수정했습니다.
+                // 백엔드 API 호출 (Port 5000)
                 const response = await fetch('http://localhost:5000/api/artworks');
                 
                 if (!response.ok) {
@@ -44,37 +44,32 @@ const Explore = () => {
 
                 const dbData = await response.json();
 
-                // DB 데이터 컬럼명(image_url 등)을 프론트엔드 변수명(img 등)으로 매칭
                 const formattedData = dbData.map(item => ({
                     ...item,
-                    img: item.image_url,       // DB: image_url -> Front: img
-                    author: item.artist_name,  // DB: artist_name -> Front: author
-                    priceValue: item.price,    // 정렬용 숫자 가격
-                    price: `${item.price}C`,   // 표시용 문자열 가격
-                    // DB에 태그/색상 컬럼이 없으므로 임시 값 부여 (에러 방지)
-                    tags: ["AI", "Art", "Digital"], 
+                    img: item.image_url,       
+                    author: item.artist_name,  
+                    priceValue: item.price,    
+                    price: `${item.price}C`,   
+                    tags: item.tags ? item.tags.split(',') : [], 
                     color: "#1a1a1a"
                 }));
 
                 setArtworks(formattedData);
-                setFilteredData(formattedData); // 초기 데이터 설정
+                setFilteredData(formattedData); 
             } catch (error) {
-                console.error("데이터를 불러오지 못했습니다:", error);
-                alert("서버와 연결할 수 없습니다. 백엔드 서버(Port 5000)가 켜져 있는지 확인해주세요!");
+                console.error("데이터 로딩 실패:", error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-
-        // 최근 검색어 로드
         const savedSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
         setRecentSearches(savedSearches);
     }, []);
 
     // ----------------------------------------------------------------------
-    // 필터링 로직 (DB에서 받아온 데이터를 기반으로 작동)
+    // 2. 필터링 로직
     // ----------------------------------------------------------------------
     useEffect(() => {
         if(artworks.length === 0) return;
@@ -82,28 +77,23 @@ const Explore = () => {
         setLoading(true);
         setTimeout(() => {
             let result = artworks.filter(item => {
-                // 검색어 필터
                 const matchQuery = item.title.toLowerCase().includes(keyword.toLowerCase()) || 
                                    item.author.toLowerCase().includes(keyword.toLowerCase()) ||
                                    (item.tags && item.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase())));
                 
-                // 카테고리 필터
                 const matchCategory = category === 'all' || item.category === category;
                 
-                // 가격 필터
                 let matchPrice = true;
                 if (priceLevel === 'free') matchPrice = item.priceValue === 0;
                 else if (priceLevel === 'low') matchPrice = item.priceValue > 0 && item.priceValue <= 100;
                 else if (priceLevel === 'mid') matchPrice = item.priceValue > 100 && item.priceValue <= 300;
                 else if (priceLevel === 'high') matchPrice = item.priceValue > 300;
                 
-                // 찜한 작품 필터 (Context 연동)
                 const matchLiked = showLikedOnly ? isInCart(item.id) : true;
 
                 return matchQuery && matchCategory && matchPrice && matchLiked;
             });
 
-            // 정렬 로직
             if (sortOrder === 'latest') {
                 result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
             } else if (sortOrder === 'popular') {
@@ -118,6 +108,10 @@ const Explore = () => {
         }, 300);
     }, [artworks, category, priceLevel, sortOrder, showLikedOnly, cartItems, keyword]);
 
+    // ----------------------------------------------------------------------
+    // 3. 핸들러 함수들 (줄바꿈 정리)
+    // ----------------------------------------------------------------------
+    
     // 검색 핸들러
     const handleSearch = () => {
         if (!keyword.trim()) {
@@ -130,11 +124,12 @@ const Explore = () => {
         setShowRecentDropdown(false);
     };
 
+    // 태그 클릭 핸들러
     const handleTagClick = (tag) => {
         setKeyword(tag.replace('#', ''));
     };
 
-    // 하트(찜하기) 버튼 핸들러
+    // 찜하기(하트) 핸들러
     const handleHeartClick = (e, item) => {
         e.stopPropagation();
         if (isInCart(item.id)) {
@@ -147,9 +142,10 @@ const Explore = () => {
         }
     };
 
-    // 모달 내부 장바구니 핸들러
+    // 모달 내 '장바구니 담기' 핸들러
     const handleModalAddToCart = () => {
         if (!selectedArtwork) return;
+        
         if (isInCart(selectedArtwork.id)) {
             if (window.confirm("이미 장바구니에 있는 작품입니다.\n장바구니에서 확인하시겠습니까?")) {
                 navigate('/cart');
@@ -162,19 +158,62 @@ const Explore = () => {
         }
     };
 
-    const handleModalBuy = () => {
-        alert("구매 완료 되었습니다!");
+    // ★ [수정됨] 구매하기 버튼 핸들러 (2단계 흐름 적용)
+    const handleModalBuy = async () => {
+        if (!selectedArtwork) return;
+
+        const userId = localStorage.getItem('userId') || 'admin';
+
+        // 1. 구매 의사 확인
+        const confirmMsg = `'${selectedArtwork.title}' 작품을 구매하시겠습니까?\n(보유 코인이 차감됩니다)`;
+        if (!window.confirm(confirmMsg)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5000/api/purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    artworkId: selectedArtwork.id,
+                    price: selectedArtwork.priceValue
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 2. 구매 성공 알림
+                const moveMsg = `구매가 완료되었습니다! 🎉\n(남은 코인: ${data.leftCoins}C)\n\n[확인] -> 작품 보관함으로 이동\n[취소] -> 계속 둘러보기`;
+                
+                // 장바구니/찜 목록 정리
+                if (isInCart(selectedArtwork.id)) {
+                    removeFromCart(selectedArtwork.id);
+                }
+
+                // 3. 이동 여부 질문
+                if (window.confirm(moveMsg)) {
+                    navigate('/archive'); // 이동
+                } else {
+                    setSelectedArtwork(null); // 모달 닫고 계속 쇼핑
+                }
+
+            } else {
+                alert(`구매 실패: ${data.message}`);
+            }
+        } catch (error) {
+            console.error("구매 에러:", error);
+            alert("서버와 연결할 수 없습니다. 백엔드가 켜져 있는지 확인해주세요.");
+        }
     };
 
-    // 신규 아이콘 로직 (최근 30일 이내)
     const isNew = (dateString) => {
         if (!dateString) return false;
-        const date = new Date(dateString);
-        const now = new Date();
-        return Math.ceil(Math.abs(now - date) / (1000 * 60 * 60 * 24)) <= 30;
+        // 날짜 계산 로직 (필요 시 복구)
+        return true; 
     };
 
-    // 화면 표시용 데이터 슬라이싱
     const displayedItems = filteredData.slice(0, currentPage * itemsPerPage);
 
     return (
@@ -197,7 +236,6 @@ const Explore = () => {
                     </nav>
 
                     <div className="flex items-center space-x-6">
-                        {/* 장바구니 아이콘 */}
                         <div className="relative cursor-pointer group" onClick={() => navigate('/cart')} title="장바구니">
                             <span className="text-2xl text-gray-400 group-hover:text-white transition">🛒</span>
                             {cartItems.length > 0 && (
@@ -231,7 +269,6 @@ const Explore = () => {
                             <button onClick={handleSearch} className="bg-orange-600 text-white px-8 py-3 rounded-full font-bold hover:bg-orange-700">검색</button>
                         </div>
                         
-                        {/* 최근 검색어 */}
                         {showRecentDropdown && recentSearches.length > 0 && (
                             <div className="absolute top-full left-4 right-4 mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden text-left">
                                 <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-700">최근 검색어</div>
@@ -379,7 +416,7 @@ const Explore = () => {
                                     By {selectedArtwork.author}
                                 </p>
                                 <div className="py-6 border-y border-gray-800 text-sm text-gray-300 leading-relaxed">
-                                    {selectedArtwork.description || "이 작품은 AI 알고리즘을 통해 생성된 독창적인 디지털 아트워크입니다. 우주의 신비로움과 기술의 조화를 표현하고 있습니다."}
+                                    {selectedArtwork.description || "이 작품은 AI 알고리즘을 통해 생성된 독창적인 디지털 아트워크입니다."}
                                 </div>
                             </div>
                             <div className="mt-6">

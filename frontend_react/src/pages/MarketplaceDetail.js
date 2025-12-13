@@ -1,60 +1,144 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import { useCart } from '../context/CartContext'; // Context 불러오기 (필요 시 확장 가능)
+import { useCart } from '../context/CartContext'; // 장바구니 기능이 필요할 경우 사용
 
 const MarketplaceDetail = () => {
     const { id } = useParams(); 
     const navigate = useNavigate();
+    const { addToCart, isInCart, removeFromCart } = useCart();
+    
     const [artwork, setArtwork] = useState(null);
-    const { addToCart } = useCart(); // 나중에 '장바구니 담기' 버튼을 따로 만들 때 사용 가능
+    const [loading, setLoading] = useState(true);
 
-    // [1] 데이터 로드 (기존 로직 유지)
+    // ----------------------------------------------------------------------
+    // 1. 서버에서 데이터 가져오기 (DB 연동)
+    // ----------------------------------------------------------------------
     useEffect(() => {
         window.scrollTo(0, 0);
 
-        const imageCollection = [
-            "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&q=80",
-            "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=600&q=80",
-            "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&q=80",
-            "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=80",
-            "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=600&q=80",
-            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=80", 
-            "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80",
-            "https://images.unsplash.com/photo-1484589065579-248aad0d8b13?w=600&q=80",
-            "https://images.unsplash.com/photo-1465101162946-4377e57745c3?w=600&q=80", 
-            "https://images.unsplash.com/photo-1534293630900-a3528f80cb32?w=600&q=80",
-            // ... (이미지 URL 계속)
-        ];
+        const fetchDetail = async () => {
+            try {
+                // 전체 데이터를 가져와서 ID로 찾습니다. 
+                // (추후 백엔드에 /api/artworks/:id 엔드포인트가 생기면 그걸로 대체 가능)
+                const response = await fetch('http://localhost:5000/api/artworks');
+                
+                if (!response.ok) {
+                    throw new Error('서버 연결 실패');
+                }
 
-        const targetId = parseInt(id) || 1;
-        
-        const generatedItem = {
-            id: targetId,
-            title: `Cosmic Art #${targetId}`,
-            author: `Artist_${targetId}`,
-            price: (Math.floor(targetId * 1234) % 5000) + 500,
-            category: ['일러스트', '컨셉아트', '어플 디자인', '마케팅 배너'][targetId % 4],
-            img: imageCollection[(targetId - 1) % 10], 
-            creationRate: 60 + (targetId % 40),
-            buyersCount: 10 + (targetId * 5),
-            description: "이 작품은 AI 알고리즘과 작가의 리터칭이 결합된 고퀄리티 아트워크입니다. 상업적 용도로 자유롭게 사용 가능합니다.",
-            tags: ["#우주", "#AI", "#디지털아트", "#고해상도"]
+                const dbData = await response.json();
+                
+                // URL의 id와 일치하는 작품 찾기 (URL params는 문자열이므로 숫자로 변환)
+                const targetId = parseInt(id);
+                const foundItem = dbData.find(item => item.id === targetId);
+
+                if (foundItem) {
+                    // DB 데이터를 UI에 맞게 변환
+                    setArtwork({
+                        id: foundItem.id,
+                        title: foundItem.title,
+                        author: foundItem.artist_name,
+                        price: foundItem.price, // 숫자형 (계산용)
+                        priceDisplay: `${foundItem.price.toLocaleString()} C`, // 표시용
+                        category: foundItem.category,
+                        img: foundItem.image_url,
+                        description: foundItem.description || "이 작품은 AI 알고리즘과 작가의 리터칭이 결합된 고퀄리티 아트워크입니다.",
+                        // DB에 tags가 문자열("우주,AI")로 저장되어 있다면 배열로 변환
+                        tags: foundItem.tags ? foundItem.tags.split(',') : ["#AI", "#Digital"],
+                        
+                        // 아래 데이터는 DB에 없으므로 시각적 효과를 위해 임의 생성 (UI 유지용)
+                        creationRate: 60 + (foundItem.id % 40),
+                        buyersCount: 10 + (foundItem.id * 5),
+                    });
+                } else {
+                    alert("해당 작품을 찾을 수 없습니다.");
+                    navigate('/marketplace');
+                }
+            } catch (error) {
+                console.error("데이터 로딩 실패:", error);
+                alert("서버 연결에 실패했습니다.");
+            } finally {
+                setLoading(false);
+            }
         };
 
-        setArtwork(generatedItem);
-    }, [id]);
+        fetchDetail();
+    }, [id, navigate]);
 
-    // [2] 구매 버튼 클릭 핸들러 (요청사항 3번 반영)
-    const handlePurchase = () => {
-        // 장바구니 이동이 아닌, 즉시 구매 완료 처리
-        alert("구매 완료되었습니다.");
-        
-        // (선택사항) 구매 후 메인으로 이동하려면 아래 주석 해제
-        // navigate('/'); 
+    // ----------------------------------------------------------------------
+    // 2. 구매하기 버튼 핸들러 (서버 API 연동)
+    // ----------------------------------------------------------------------
+    const handlePurchase = async () => {
+        if (!artwork) return;
+
+        // 1. 유저 ID 확인 (로그인 기능 전이므로 'admin' 사용)
+        const userId = localStorage.getItem('userId') || 'admin';
+
+        // 2. 구매 확인
+        if (!window.confirm(`'${artwork.title}' 작품을 ${artwork.priceDisplay}에 구매하시겠습니까?\n(보유 코인이 차감됩니다)`)) {
+            return;
+        }
+
+        try {
+            // 3. 서버에 구매 요청
+            const response = await fetch('http://localhost:5000/api/purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    artworkId: artwork.id,
+                    price: artwork.price 
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 4. 성공 시 처리: 먼저 성공 알림, 이후 보관함 이동 여부 확인
+                alert(`구매가 완료되었습니다! 🎉\n(남은 코인: ${data.leftCoins}C)`);
+
+                // 만약 장바구니에 담겨있던 상품이라면 장바구니에서 제거
+                if (isInCart(artwork.id)) {
+                    removeFromCart(artwork.id);
+                }
+
+                // 보관함 이동 여부 확인
+                if (window.confirm('작품 보관함으로 이동하시겠습니까?\n[확인] 이동 / [취소] 계속 둘러보기')) {
+                    navigate('/archive'); // 보관함으로 이동
+                }
+            } else {
+                // 5. 실패 시 처리 (코인 부족, 중복 구매 등)
+                alert(`구매 실패: ${data.message}`);
+            }
+        } catch (error) {
+            console.error("구매 에러:", error);
+            alert("서버와 통신 중 오류가 발생했습니다.");
+        }
     };
 
-    if (!artwork) return <div className="text-white text-center py-20">로딩 중...</div>;
+    // [수정] 로딩 중이거나 데이터가 없을 때 하얀 화면 대신 안내 문구 표시
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+                <p className="text-xl font-bold">데이터를 불러오는 중입니다...</p>
+            </div>
+        );
+    }
+
+    if (!artwork) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+                <p className="text-xl font-bold text-red-500 mb-4">작품 정보를 찾을 수 없습니다.</p>
+                <button 
+                    onClick={() => navigate('/marketplace')}
+                    className="px-6 py-2 bg-orange-600 rounded-full font-bold hover:bg-orange-700"
+                >
+                    목록으로 돌아가기
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black text-gray-300 font-sans relative pb-20">
@@ -107,14 +191,14 @@ const MarketplaceDetail = () => {
                             </div>
                         </div>
 
-                        {/* 3. 대형 구매하기 버튼 (수정됨) */}
+                        {/* 3. 대형 구매하기 버튼 (API 연결됨) */}
                         <div 
-                            onClick={handlePurchase} // 클릭 시 '구매 완료' 알림
+                            onClick={handlePurchase} 
                             className="bg-orange-500 rounded-2xl p-1 flex items-center justify-between shadow-lg hover:bg-orange-600 transition cursor-pointer group"
                         >
                             <div className="px-8 py-4 text-white font-extrabold text-xl">구매하기</div>
                             <div className="flex-grow text-right px-8 py-4 bg-black/10 rounded-r-xl group-hover:bg-black/20 transition">
-                                <span className="text-white font-bold text-2xl">{artwork.price.toLocaleString()} 코인</span>
+                                <span className="text-white font-bold text-2xl">{artwork.priceDisplay}</span>
                             </div>
                         </div>
                     </div>
@@ -164,7 +248,7 @@ const MarketplaceDetail = () => {
                             <div className="border-t border-gray-100 pt-4 flex flex-wrap gap-2 justify-center">
                                 {artwork.tags.map((tag, idx) => (
                                     <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                                        {tag}
+                                        {tag.startsWith('#') ? tag : `#${tag}`}
                                     </span>
                                 ))}
                             </div>

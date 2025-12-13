@@ -35,7 +35,7 @@ function App() {
             <Route path="/myspace/node" element={<MySpaceNode />} />
 
             <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/marketplace/detail/:id" element={<MarketplaceDetail />} />
+            <Route path="/marketplace/:id" element={<MarketplaceDetail />} />
             
             <Route path="/cart" element={<Cart />} />
 

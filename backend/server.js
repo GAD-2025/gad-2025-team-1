@@ -11,15 +11,172 @@ app.use(cors());
 app.use(express.json());
 
 // 1. MySQL 연결 설정
+// ★수정됨: 제공해주신 원격 DB 정보로 설정 업데이트
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '4346',     // ★비밀번호 확인 필수★
-    database: 'myspace_db', 
+    host: 'route.nois.club', // ★호스트 수정
+    port: 12759,             // ★포트 추가 (기본 3306이 아니므로 필수)
+    user: 'team1',           // ★유저네임 수정 (root -> team1)
+    password: 'xcFAWlYUurIY',      // ★중요: 여기에 'team1' 계정의 비밀번호를 입력해야 합니다.
+    database: 'team1_db',    // 데이터베이스 이름
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
+
+// ★ [추가됨] 테이블 자동 초기화 함수
+// 서버 시작 시 테이블이 없으면 자동으로 생성해줍니다.
+const initDB = async () => {
+    try {
+        const connection = await pool.getConnection();
+        
+        console.log("🔄 데이터베이스 테이블 확인 및 생성 중...");
+
+        // 1. Users 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(50) NOT NULL UNIQUE,
+                    password VARCHAR(255) NOT NULL,
+                    nickname VARCHAR(50) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    profile_image VARCHAR(255) DEFAULT '/images/default.jpg',
+                    bio TEXT DEFAULT NULL,
+                    coins INT DEFAULT 1000,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 2. Artworks 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS artworks (
+                id INT NOT NULL AUTO_INCREMENT,
+                title VARCHAR(100) NOT NULL,
+                artist_name VARCHAR(50) NOT NULL,
+                category VARCHAR(50) NOT NULL DEFAULT 'Etc',
+                price INT DEFAULT '0',
+                image_url VARCHAR(500) NOT NULL,
+                views INT DEFAULT '0',
+                description VARCHAR(200) DEFAULT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 3. MySpace Folders 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS myspace_folders (
+                id INT NOT NULL AUTO_INCREMENT,
+                user_id VARCHAR(50) NOT NULL,
+                folder_index INT NOT NULL,
+                name VARCHAR(50) DEFAULT 'New Folder',
+                cover_image VARCHAR(255) DEFAULT NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY unique_folder (user_id, folder_index)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 4. Folder Items 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS folder_items (
+                id INT NOT NULL AUTO_INCREMENT,
+                folder_id INT NOT NULL,
+                artwork_id INT NOT NULL,
+                PRIMARY KEY (id),
+                KEY folder_id (folder_id),
+                KEY artwork_id (artwork_id),
+                CONSTRAINT folder_items_ibfk_1 FOREIGN KEY (folder_id) REFERENCES myspace_folders (id) ON DELETE CASCADE,
+                CONSTRAINT folder_items_ibfk_2 FOREIGN KEY (artwork_id) REFERENCES artworks (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 5. Purchases 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS purchases (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id VARCHAR(50) NOT NULL,
+                    artwork_id INT NOT NULL,
+                    price INT DEFAULT 0,
+                    purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (artwork_id) REFERENCES artworks (id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 6. Likes 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS likes (
+                id INT NOT NULL AUTO_INCREMENT,
+                user_id VARCHAR(50) NOT NULL,
+                artwork_id INT NOT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY artwork_id (artwork_id),
+                CONSTRAINT likes_ibfk_1 FOREIGN KEY (artwork_id) REFERENCES artworks (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 7. MySpace Orbit 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS myspace_orbit (
+                id INT NOT NULL AUTO_INCREMENT,
+                user_id VARCHAR(50) NOT NULL,
+                artwork_id INT NOT NULL,
+                orbit_type VARCHAR(10) DEFAULT 'outer',
+                position_index INT DEFAULT NULL,
+                PRIMARY KEY (id),
+                KEY artwork_id (artwork_id),
+                CONSTRAINT myspace_orbit_ibfk_1 FOREIGN KEY (artwork_id) REFERENCES artworks (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 8. Posts 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS posts (
+                id INT NOT NULL AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                title VARCHAR(100) NOT NULL,
+                content TEXT,
+                image_url VARCHAR(255) DEFAULT NULL,
+                likes INT DEFAULT '0',
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 9. Project Nodes 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS project_nodes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                artwork_id INT,
+                type VARCHAR(50),
+                title VARCHAR(100),
+                content TEXT,
+                position_x INT,
+                position_y INT,
+                FOREIGN KEY (artwork_id) REFERENCES artworks (id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        // 10. Node Connections 테이블
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS node_connections (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                from_node_id INT,
+                to_node_id INT,
+                FOREIGN KEY (from_node_id) REFERENCES project_nodes (id) ON DELETE CASCADE,
+                FOREIGN KEY (to_node_id) REFERENCES project_nodes (id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `);
+
+        connection.release();
+        console.log("✅ 데이터베이스 테이블 초기화 완료");
+    } catch (err) {
+        console.error("❌ 테이블 초기화 실패:", err);
+    }
+};
+
+// 서버 시작 시 DB 초기화 실행
+initDB();
+
 
 // 2. 회원가입 API
 app.post('/api/signup', async (req, res) => {
@@ -98,14 +255,14 @@ app.get('/api/inventory/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
         const [purchased] = await pool.query(`
-            SELECT a.id, a.image_url, a.title, 'purchased' as type 
+            SELECT a.id, a.image_url, a.title, a.artist_name, 'purchased' as type 
             FROM purchases p 
             JOIN artworks a ON p.artwork_id = a.id 
             WHERE p.user_id = ?
         `, [userId]);
 
         const [liked] = await pool.query(`
-            SELECT a.id, a.image_url, a.title, 'liked' as type 
+            SELECT a.id, a.image_url, a.title, a.artist_name, 'liked' as type 
             FROM likes l 
             JOIN artworks a ON l.artwork_id = a.id 
             WHERE l.user_id = ?
@@ -226,7 +383,12 @@ app.put('/api/myspace/save', async (req, res) => {
         connection.release();
     }
 });
-// ★ [NEW] 작품 탐색 페이지용 전체 작품 목록 API
+
+// (app.listen will be called after all routes are registered at the end of this file)
+
+// (app.listen will be called after all routes are registered at the end of this file)
+
+// 8. 작품 탐색 페이지용 전체 작품 목록 API
 app.get('/api/artworks', async (req, res) => {
     try {
         // artworks 테이블의 모든 데이터를 가져옵니다.
@@ -239,7 +401,7 @@ app.get('/api/artworks', async (req, res) => {
 });
 
 
-// 8. 노드 및 연결선 가져오기
+// 9. 노드 및 연결선 가져오기
 app.get('/api/nodes/:artworkId', async (req, res) => {
     const { artworkId } = req.params;
     try {
@@ -262,7 +424,7 @@ app.get('/api/nodes/:artworkId', async (req, res) => {
     }
 });
 
-// 9. 새 노드 생성
+// 10. 새 노드 생성
 app.post('/api/nodes', async (req, res) => {
     const { postId, type, title, content, x, y } = req.body;
     try {
@@ -279,7 +441,7 @@ app.post('/api/nodes', async (req, res) => {
     }
 });
 
-// ★ [추가됨] 10. 노드 삭제 API
+// 11. 노드 삭제 API
 app.delete('/api/nodes/:nodeId', async (req, res) => {
     const { nodeId } = req.params;
     try {
@@ -297,6 +459,46 @@ app.delete('/api/nodes/:nodeId', async (req, res) => {
     }
 });
 
+// NOTE: app.listen will be called after all routes (moved to file end)
+
+app.post('/api/purchase', async (req, res) => {
+    console.log('--- 구매 요청 진입 ---');
+    const { userId, artworkId } = req.body;
+    let { price } = req.body;
+    price = Number(price);
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1) 유저 확인 및 보유 코인 확인
+        const [users] = await connection.query('SELECT coins FROM users WHERE username = ?', [userId]);
+        if (users.length === 0) throw new Error('유저를 찾을 수 없습니다.');
+        if (users[0].coins < price) throw new Error('코인이 부족합니다.');
+
+        // 2) 이미 구매 여부 확인
+        const [exists] = await connection.query('SELECT * FROM purchases WHERE user_id = ? AND artwork_id = ?', [userId, artworkId]);
+        if (exists.length > 0) throw new Error('이미 보유한 작품입니다.');
+
+        // 3) 코인 차감 및 구매 기록 추가
+        await connection.query('UPDATE users SET coins = coins - ? WHERE username = ?', [price, userId]);
+        await connection.query('INSERT INTO purchases (user_id, artwork_id, price) VALUES (?, ?, ?)', [userId, artworkId, price]);
+
+        await connection.commit();
+
+        const leftCoins = users[0].coins - price;
+        console.log(`구매 완료: ${userId} -> 작품 ${artworkId} (남은 코인: ${leftCoins})`);
+        res.json({ success: true, message: '구매 성공', leftCoins });
+    } catch (error) {
+        await connection.rollback();
+        console.error('구매 실패:', error.message);
+        res.status(400).json({ success: false, message: error.message });
+    } finally {
+        connection.release();
+    }
+});
+
+// Start server after all routes are registered
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
