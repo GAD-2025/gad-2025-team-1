@@ -16,7 +16,7 @@ const MySpaceSetting = () => {
         orbit: []
     });
 
-    const [inventory, setInventory] = useState([]); // 구매한 작품 목록
+    const [inventory, setInventory] = useState([]); // 구매한 작품 목록 (DB에서 art_1~7 로드)
     const [imagePickerModal, setImagePickerModal] = useState(false);
     const [folderEditModal, setFolderEditModal] = useState(false);
     const [pickerMode, setPickerMode] = useState(''); 
@@ -43,10 +43,10 @@ const MySpaceSetting = () => {
                         name: user.nickname,
                         bio: user.bio || '',
                         img: user.profile_image || '/images/White Cats.jpg',
-                        folders: data.folders, // DB에서 온 폴더 구조
-                        orbit: data.orbit      // DB에서 온 궤도 목록
+                        folders: data.folders || [], // DB에서 온 폴더 구조
+                        orbit: data.orbit || []      // DB에서 온 궤도 목록
                     });
-                    setInventory(data.inventory); // DB에서 온 보유 작품
+                    setInventory(data.inventory || []); // DB에서 온 보유 작품
                 }
             })
             .catch(err => console.error(err));
@@ -64,6 +64,21 @@ const MySpaceSetting = () => {
             reader.onload = (event) => setMyData(prev => ({...prev, img: event.target.result}));
             reader.readAsDataURL(e.target.files[0]);
         }
+    };
+
+    // ★ 폴더 생성 (추가 버튼 클릭 시)
+    const createNewFolder = () => {
+        const newFolderId = Date.now(); // 임시 ID 생성
+        const newFolder = {
+            id: newFolderId,
+            name: "새 폴더",
+            thumb: "/images/art_1.jpg", // 기본 썸네일 (보유작품 중 하나로 설정)
+            works: []
+        };
+        
+        // 폴더 목록에 추가하고 바로 편집 모달 열기
+        setMyData(prev => ({ ...prev, folders: [...prev.folders, newFolder] }));
+        openFolderEdit(newFolderId);
     };
 
     // ★ 폴더 이름 변경
@@ -115,7 +130,13 @@ const MySpaceSetting = () => {
 
     const openPicker = (mode) => {
         setPickerMode(mode);
-        if (mode === 'folder') setFolderEditModal(false);
+        // 폴더 모드일 때는 폴더 편집 모달을 잠시 숨김 (피커 뒤에 깔리지 않게 하거나, z-index 처리)
+        // 여기서는 UX상 폴더 모달을 닫지 않고 피커를 위에 띄우는 것이 좋으나, 
+        // 간단한 구현을 위해 모달 상태 관리
+        if (mode === 'folder') {
+             // 폴더 편집 모달 위에 피커가 뜨도록 z-index를 CSS로 조정하거나,
+             // 현재 구조상 그냥 띄워도 됨 (피커가 더 뒤에 렌더링되므로)
+        }
         setImagePickerModal(true);
     };
 
@@ -133,6 +154,7 @@ const MySpaceSetting = () => {
             });
             setMyData(prev => ({ ...prev, folders: newFolders }));
             setImagePickerModal(false);
+            // 폴더 편집 모달은 계속 열려있어야 함
             setFolderEditModal(true);
         }
     };
@@ -160,6 +182,7 @@ const MySpaceSetting = () => {
         }
     };
 
+    // 현재 편집 중인 폴더 찾기
     const currentFolder = myData.folders.find(f => f.id === currentEditingFolderId);
 
     return (
@@ -192,13 +215,22 @@ const MySpaceSetting = () => {
                             {myData.folders.map(folder => (
                                 <div key={folder.id} className="folder-item-edit" onClick={() => openFolderEdit(folder.id)}>
                                     <div className="item-info">
-                                        <img src={`${process.env.PUBLIC_URL}${folder.thumb}`} className="item-thumb" alt={folder.name} />
+                                        <img src={folder.thumb.startsWith('/') ? folder.thumb : `${process.env.PUBLIC_URL}${folder.thumb}`} className="item-thumb" alt={folder.name} />
                                         <span style={{fontWeight:'bold'}}>{folder.name}</span>
                                         <span style={{fontSize:'12px', color:'#666', marginLeft:'10px'}}>({folder.works ? folder.works.length : 0}개)</span>
                                     </div>
                                     <i className="fas fa-chevron-right"></i>
                                 </div>
                             ))}
+                            
+                            {/* ★ 폴더 추가 버튼 (새로 생성) */}
+                            <div className="folder-add-btn" onClick={createNewFolder} style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                border: '2px dashed #ccc', borderRadius: '10px', 
+                                padding: '15px', cursor: 'pointer', color: '#888'
+                            }}>
+                                <i className="fas fa-plus" style={{marginRight:'8px'}}></i> 새 폴더 만들기
+                            </div>
                         </div>
                     </section>
 
@@ -208,10 +240,11 @@ const MySpaceSetting = () => {
                         <div className="orbit-grid">
                             {myData.orbit.map((imgUrl, index) => (
                                 <div key={index} className="orbit-item">
-                                    <img src={`${process.env.PUBLIC_URL}${imgUrl}`} alt="orbit" />
+                                    <img src={imgUrl.startsWith('/') ? imgUrl : `${process.env.PUBLIC_URL}${imgUrl}`} alt="orbit" />
                                     <button className="btn-delete-orbit" onClick={() => deleteOrbitWork(index)}><i className="fas fa-minus"></i></button>
                                 </div>
                             ))}
+                            {/* 궤도 작품 추가 버튼 */}
                             <div className="orbit-add-btn" onClick={() => openPicker('orbit')}><i className="fas fa-plus"></i></div>
                         </div>
                     </section>
@@ -223,19 +256,19 @@ const MySpaceSetting = () => {
                 </div>
             </main>
 
-            {/* 이미지 피커 모달 */}
+            {/* 이미지 피커 모달 (보유 작품 art_1 ~ art_7 선택) */}
             {imagePickerModal && (
-                <div className="modal-overlay active">
+                <div className="modal-overlay active" style={{zIndex: 2000}}>
                     <div className="modal-content">
                         <div className="modal-header">
-                            <span className="modal-title">보유한 작품 선택</span>
+                            <span className="modal-title">보유한 작품 선택 (Inventory)</span>
                             <button className="modal-close" onClick={() => setImagePickerModal(false)}>&times;</button>
                         </div>
                         <div className="image-picker-grid">
                             {inventory.length > 0 ? (
                                 inventory.map((item) => (
                                     <div key={item.id} className="pick-item" onClick={() => pickImage(item.image_url)}>
-                                        <img src={`${process.env.PUBLIC_URL}${item.image_url}`} className="pick-img" alt={item.title} />
+                                        <img src={item.image_url.startsWith('/') ? item.image_url : `${process.env.PUBLIC_URL}${item.image_url}`} className="pick-img" alt={item.title} />
                                         <span className="pick-label">{item.title}</span>
                                     </div>
                                 ))
@@ -249,7 +282,7 @@ const MySpaceSetting = () => {
 
             {/* 폴더 편집 모달 */}
             {folderEditModal && currentFolder && (
-                 <div className="modal-overlay active">
+                 <div className="modal-overlay active" style={{zIndex: 1000}}>
                     <div className="modal-content">
                         <div className="modal-header">
                             <span className="modal-title">폴더 설정</span>
@@ -259,27 +292,32 @@ const MySpaceSetting = () => {
                         <div className="folder-edit-header" style={{display:'flex', gap:'20px', marginBottom:'20px', paddingBottom:'20px', borderBottom:'1px solid #eee'}}>
                             <div style={{textAlign:'center'}}>
                                 <label style={{fontSize:'12px'}}>커버 이미지</label>
-                                <div style={{width:'80px', height:'80px', borderRadius:'50%', overflow:'hidden', margin:'0 auto', border:'1px solid #ddd', position:'relative'}}>
-                                    <img src={`${process.env.PUBLIC_URL}${currentFolder.thumb}`} alt="cover" style={{width:'100%', height:'100%', objectFit:'cover'}} />
-                                    <label htmlFor={`cover-${currentFolder.id}`} style={{position:'absolute', bottom:0, width:'100%', background:'rgba(0,0,0,0.5)', color:'white', fontSize:'10px', cursor:'pointer', textAlign:'center'}}>변경</label>
+                                <div style={{width:'80px', height:'80px', borderRadius:'10px', overflow:'hidden', margin:'0 auto', border:'1px solid #ddd', position:'relative'}}>
+                                    <img src={currentFolder.thumb.startsWith('/') ? currentFolder.thumb : `${process.env.PUBLIC_URL}${currentFolder.thumb}`} alt="cover" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                                    <label htmlFor={`cover-${currentFolder.id}`} style={{position:'absolute', bottom:0, width:'100%', background:'rgba(0,0,0,0.5)', color:'white', fontSize:'10px', cursor:'pointer', textAlign:'center', display:'block'}}>변경</label>
                                     <input type="file" id={`cover-${currentFolder.id}`} style={{display:'none'}} accept="image/*" onChange={handleFolderCoverUpload} />
                                 </div>
                             </div>
                             <div style={{flex:1}}>
                                 <label style={{fontSize:'12px'}}>폴더 이름</label>
-                                <input type="text" className="form-input" value={currentFolder.name} onChange={handleFolderNameChange} style={{width:'100%', padding:'8px'}}/>
+                                <input type="text" className="form-input" value={currentFolder.name} onChange={handleFolderNameChange} style={{width:'100%', padding:'8px'}} placeholder="폴더 이름을 입력하세요"/>
                             </div>
                         </div>
 
-                        <p style={{fontWeight:'bold'}}>폴더 내 작품</p>
+                        <p style={{fontWeight:'bold'}}>폴더 내 작품 관리</p>
                         <div className="orbit-grid" style={{gridTemplateColumns: 'repeat(3, 1fr)', maxHeight:'250px', overflowY:'auto'}}>
-                             {currentFolder.works.map((work, idx) => (
+                             {currentFolder.works && currentFolder.works.map((work, idx) => (
                                 <div key={idx} className="orbit-item">
-                                    <img src={`${process.env.PUBLIC_URL}${work}`} alt="work" />
+                                    <img src={work.startsWith('/') ? work : `${process.env.PUBLIC_URL}${work}`} alt="work" />
                                     <button className="btn-delete-orbit" onClick={() => deleteFolderWork(idx)}><i className="fas fa-minus"></i></button>
                                 </div>
                             ))}
+                            {/* 폴더 내 작품 추가 버튼 */}
                             <div className="orbit-add-btn" onClick={() => openPicker('folder')}><i className="fas fa-plus"></i></div>
+                        </div>
+                        
+                        <div style={{marginTop: '20px', textAlign: 'right'}}>
+                            <button className="btn-action btn-save" onClick={() => setFolderEditModal(false)} style={{padding: '8px 20px', fontSize: '14px'}}>완료</button>
                         </div>
                     </div>
                 </div>

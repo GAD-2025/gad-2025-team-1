@@ -1,16 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2/promise'); // promise 버전 사용 통일
 const bcrypt = require('bcrypt');
 const app = express();
 
-const PORT = 5000; // 리액트(3000)와 충돌 방지
+const PORT = 5000;
 const saltRounds = 10;
 
 app.use(cors());
 app.use(express.json());
 
-// 1. MySQL 연결 설정 (제공해주신 정보 그대로 적용)
+// 1. MySQL 연결 설정
 const pool = mysql.createPool({
     host: 'route.nois.club',
     port: 12759,
@@ -19,18 +19,16 @@ const pool = mysql.createPool({
     database: 'team1_db',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    charset: 'utf8mb4' // ★ 한글 깨짐 방지 필수
 });
 
-// ★ [DB 초기화 함수] 
-// 서버 실행 시 테이블이 없으면 자동으로 생성합니다.
-// (MySQL Workbench에서 쿼리를 돌렸다면 이 과정은 건너뛰게 되지만, 안전장치로 둡니다.)
+// DB 초기화 함수
 const initDB = async () => {
     try {
         const connection = await pool.getConnection();
         console.log("🔄 데이터베이스 테이블 확인 중...");
 
-        // 1. Users 테이블 (★ bio 컬럼 추가됨)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +42,6 @@ const initDB = async () => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 2. Artworks 테이블 (★ prompt 컬럼 추가됨)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS artworks (
                 id INT NOT NULL AUTO_INCREMENT,
@@ -55,13 +52,17 @@ const initDB = async () => {
                 image_url VARCHAR(500) NOT NULL,
                 prompt TEXT DEFAULT NULL,
                 views INT DEFAULT '0',
-                description VARCHAR(200) DEFAULT NULL,
+                description VARCHAR(500) DEFAULT NULL,
+                tags VARCHAR(200) DEFAULT 'AI,Art',
+                is_weekly_best BOOLEAN DEFAULT FALSE,
+                ai_tool VARCHAR(50) DEFAULT NULL,
+                ai_ratio VARCHAR(50) DEFAULT NULL,
+                is_public BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 3. MySpace Folders
         await connection.query(`
             CREATE TABLE IF NOT EXISTS myspace_folders (
                 id INT NOT NULL AUTO_INCREMENT,
@@ -74,7 +75,6 @@ const initDB = async () => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 4. Folder Items
         await connection.query(`
             CREATE TABLE IF NOT EXISTS folder_items (
                 id INT NOT NULL AUTO_INCREMENT,
@@ -88,18 +88,17 @@ const initDB = async () => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 5. Purchases (구매 목록)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS purchases (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id VARCHAR(50) NOT NULL,
                 artwork_id INT NOT NULL,
+                price INT NOT NULL DEFAULT 0,
                 purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (artwork_id) REFERENCES artworks (id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 6. Likes (찜 목록)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS likes (
                 id INT NOT NULL AUTO_INCREMENT,
@@ -112,7 +111,6 @@ const initDB = async () => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 7. MySpace Orbit (궤도)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS myspace_orbit (
                 id INT NOT NULL AUTO_INCREMENT,
@@ -126,7 +124,6 @@ const initDB = async () => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 8. Project Nodes (노드)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS project_nodes (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -140,7 +137,6 @@ const initDB = async () => {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
 
-        // 9. Node Connections (연결선)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS node_connections (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -171,13 +167,21 @@ app.post('/api/signup', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
-        // bio는 회원가입 시 NULL로 들어갑니다.
         const sql = `INSERT INTO users (username, password, nickname, email, profile_image, bio) VALUES (?, ?, ?, ?, ?, NULL)`;
         const defaultImg = "/images/White Cats.jpg"; 
 
         await pool.query(sql, [id, hashedPassword, name, email, defaultImg]);
         
-        console.log("회원가입 성공!");
+        // 신규 가입자에게 Art 1~7번 자동 구매 처리
+        const starterPackIds = [1, 2, 3, 4, 5, 6, 7];
+        for (const artId of starterPackIds) {
+            await pool.query(
+                `INSERT INTO purchases (user_id, artwork_id, price) VALUES (?, ?, 0)`,
+                [id, artId]
+            ).catch(() => {}); // 중복 에러 무시
+        }
+        
+        console.log(`회원가입 성공! (${id}님에게 기본 작품 지급 완료)`);
         res.json({ success: true, message: "회원가입 성공!" });
 
     } catch (error) {
@@ -215,17 +219,37 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 3. 회원 정보 수정 (★ 오류 수정됨: bio 컬럼 사용 가능)
+// ★ 3. 회원 정보 수정 (핵심 수정: 닉네임 변경 시 작품 작가명도 변경)
 app.put('/api/user/update', async (req, res) => {
     console.log("--- 회원 정보 수정 요청 ---");
-    const { id, name, bio, img } = req.body;
+    const { id, name, bio, img } = req.body; // id=유저아이디, name=새 닉네임
 
+    const connection = await pool.getConnection(); // 트랜잭션 사용
     try {
-        // DB 스키마에 bio가 있으므로 이제 오류가 나지 않습니다.
-        const sql = `UPDATE users SET nickname = ?, bio = ?, profile_image = ? WHERE username = ?`;
-        await pool.query(sql, [name, bio, img, id]);
+        await connection.beginTransaction();
 
-        console.log(`유저(${id}) 정보 수정 완료`);
+        // 1. 기존 닉네임 가져오기
+        const [userRows] = await connection.query("SELECT nickname FROM users WHERE username = ?", [id]);
+        if (userRows.length === 0) throw new Error("User not found");
+        const oldNickname = userRows[0].nickname;
+
+        // 2. 유저 정보 업데이트 (users 테이블)
+        const sql = `UPDATE users SET nickname = ?, bio = ?, profile_image = ? WHERE username = ?`;
+        await connection.query(sql, [name, bio, img, id]);
+
+        // 3. 만약 닉네임이 바뀌었다면, 작품의 작가명(artworks 테이블)도 같이 변경
+        if (oldNickname !== name) {
+            console.log(`🔄 닉네임 변경 감지: ${oldNickname} -> ${name}`);
+            const [artResult] = await connection.query(
+                `UPDATE artworks SET artist_name = ? WHERE artist_name = ?`,
+                [name, oldNickname]
+            );
+            console.log(`   └ 관련 작품 ${artResult.affectedRows}개의 작가명 업데이트 완료`);
+        }
+
+        await connection.commit();
+
+        console.log(`유저(${id}) 정보 및 작품 동기화 완료`);
         res.json({ 
             success: true, 
             message: "정보가 수정되었습니다.",
@@ -233,17 +257,19 @@ app.put('/api/user/update', async (req, res) => {
         });
 
     } catch (error) {
+        await connection.rollback();
         console.error("수정 에러:", error);
         res.status(500).json({ success: false, message: "정보 수정 중 오류가 발생했습니다." });
+    } finally {
+        connection.release();
     }
 });
 
-// 4. [신규] 작품 구매하기 API
+// 4. 작품 구매하기 API
 app.post('/api/purchase', async (req, res) => {
     const { userId, artworkId } = req.body;
 
     try {
-        // 1) 이미 구매했는지 확인
         const [check] = await pool.query(
             `SELECT * FROM purchases WHERE user_id = ? AND artwork_id = ?`, 
             [userId, artworkId]
@@ -253,7 +279,6 @@ app.post('/api/purchase', async (req, res) => {
             return res.json({ success: false, message: "이미 소유한 작품입니다." });
         }
 
-        // 2) 구매 처리 (DB에 저장)
         await pool.query(
             `INSERT INTO purchases (user_id, artwork_id) VALUES (?, ?)`,
             [userId, artworkId]
@@ -267,7 +292,7 @@ app.post('/api/purchase', async (req, res) => {
     }
 });
 
-// 5. 내 인벤토리 조회 (구매한 것 + 찜한 것)
+// 5. 내 인벤토리 조회
 app.get('/api/inventory/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -292,8 +317,7 @@ app.get('/api/inventory/:userId', async (req, res) => {
     }
 });
 
-// 6. 마이스페이스 데이터 조회 (★ 인벤토리 포함)
-// 마이스페이스 꾸미기 페이지에서 내가 가진 아이템을 보여주기 위해 inventory도 함께 보냅니다.
+// 6. 마이스페이스 데이터 조회
 app.get('/api/myspace/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -303,7 +327,6 @@ app.get('/api/myspace/:userId', async (req, res) => {
             [userId]
         );
 
-        // 각 폴더 내부 작품 이미지
         for (let folder of folders) {
             const [works] = await pool.query(
                 `SELECT a.image_url FROM folder_items fi 
@@ -314,7 +337,7 @@ app.get('/api/myspace/:userId', async (req, res) => {
             folder.works = works.map(w => w.image_url);
         }
 
-        // 궤도(Orbit) 정보
+        // 궤도 정보
         const [orbitRows] = await pool.query(
             `SELECT a.image_url FROM myspace_orbit mo
              JOIN artworks a ON mo.artwork_id = a.id
@@ -323,7 +346,7 @@ app.get('/api/myspace/:userId', async (req, res) => {
         );
         const orbit = orbitRows.map(o => o.image_url);
 
-        // ★ [추가됨] 인벤토리 (구매한 작품 목록) - 마이스페이스 꾸미기 소스용
+        // 인벤토리 (구매한 작품 목록)
         const [inventoryRows] = await pool.query(
             `SELECT a.id, a.title, a.image_url 
              FROM purchases p
@@ -340,7 +363,7 @@ app.get('/api/myspace/:userId', async (req, res) => {
     }
 });
 
-// 7. 마이스페이스 설정 통째로 저장하기 (★ bio 오류 수정됨)
+// 7. 마이스페이스 설정 저장
 app.put('/api/myspace/save', async (req, res) => {
     const { id, name, bio, img, folders, orbit } = req.body;
     
@@ -348,29 +371,43 @@ app.put('/api/myspace/save', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1) 유저 정보 업데이트 (bio 포함)
+        // 1) 유저 정보 업데이트 (여기도 닉네임 동기화 로직 추가)
+        const [userRows] = await connection.query("SELECT nickname FROM users WHERE username = ?", [id]);
+        const oldNickname = userRows[0]?.nickname;
+
         await connection.query(
             `UPDATE users SET nickname = ?, bio = ?, profile_image = ? WHERE username = ?`,
             [name, bio, img, id]
         );
 
-        // 2) 폴더 정보 업데이트
-        for (let folder of folders) {
-            // 폴더 이름/커버 업데이트
-            await connection.query(
-                `UPDATE myspace_folders SET name = ?, cover_image = ? WHERE id = ? AND user_id = ?`,
-                [folder.name, folder.thumb, folder.id, id]
+        if (oldNickname && oldNickname !== name) {
+             await connection.query(
+                `UPDATE artworks SET artist_name = ? WHERE artist_name = ?`,
+                [name, oldNickname]
             );
+        }
 
-            // 폴더 내용물 초기화 후 재삽입 (단순화된 로직)
-            await connection.query(`DELETE FROM folder_items WHERE folder_id = ?`, [folder.id]);
-            
-            if (folder.works && folder.works.length > 0) {
-                for (let workImg of folder.works) {
-                    // 이미지 URL로 작품 ID 찾기
-                    const [artRow] = await connection.query(`SELECT id FROM artworks WHERE image_url = ?`, [workImg]);
-                    if (artRow.length > 0) {
-                        await connection.query(`INSERT INTO folder_items (folder_id, artwork_id) VALUES (?, ?)`, [folder.id, artRow[0].id]);
+        // 2) 폴더 정보 업데이트
+        await connection.query(`DELETE FROM myspace_folders WHERE user_id = ?`, [id]);
+
+        if (folders && folders.length > 0) {
+            for (let i = 0; i < folders.length; i++) {
+                const folder = folders[i];
+                const [folderResult] = await connection.query(
+                    `INSERT INTO myspace_folders (user_id, folder_index, name, cover_image) VALUES (?, ?, ?, ?)`,
+                    [id, i, folder.name, folder.thumb]
+                );
+                const newFolderId = folderResult.insertId;
+
+                if (folder.works && folder.works.length > 0) {
+                    for (let workImg of folder.works) {
+                        const [artRow] = await connection.query(`SELECT id FROM artworks WHERE image_url = ?`, [workImg]);
+                        if (artRow.length > 0) {
+                            await connection.query(
+                                `INSERT INTO folder_items (folder_id, artwork_id) VALUES (?, ?)`, 
+                                [newFolderId, artRow[0].id]
+                            );
+                        }
                     }
                 }
             }
@@ -393,6 +430,7 @@ app.put('/api/myspace/save', async (req, res) => {
         }
 
         await connection.commit();
+        console.log(`✅ 마이스페이스 저장 완료: ${id}`);
         res.json({ 
             success: true, 
             user: { username: id, nickname: name, bio: bio, profile_image: img }
@@ -400,14 +438,14 @@ app.put('/api/myspace/save', async (req, res) => {
 
     } catch (error) {
         await connection.rollback();
-        console.error("저장 에러:", error);
+        console.error("❌ 저장 에러 상세:", error);
         res.status(500).json({ success: false, message: "저장 실패" });
     } finally {
         connection.release();
     }
 });
 
-// 8. 작품 탐색 페이지용 전체 작품 목록 API (랜덤 생성된 데이터 조회)
+// 8. 전체 작품 목록
 app.get('/api/artworks', async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM artworks");
@@ -422,11 +460,74 @@ app.get('/api/artworks', async (req, res) => {
 app.get('/api/nodes/:artworkId', async (req, res) => {
     const { artworkId } = req.params;
     try {
-        const [nodes] = await pool.query(
+        let [nodes] = await pool.query(
             `SELECT * FROM project_nodes WHERE artwork_id = ?`, 
             [artworkId]
         );
         
+        // 노드가 없으면 기본 트리 자동 생성
+        if (nodes.length === 0) {
+            const connection = await pool.getConnection();
+            try {
+                await connection.beginTransaction();
+
+                const [artInfo] = await connection.query(`SELECT title, prompt FROM artworks WHERE id = ?`, [artworkId]);
+                
+                if (artInfo.length > 0) {
+                    const { title, prompt } = artInfo[0];
+                    const basePrompt = prompt || '프롬프트 없음';
+
+                    // Layer 0 (Root)
+                    const [rootRes] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'original', title, basePrompt, 100, 300]
+                    );
+                    const rootId = rootRes.insertId;
+
+                    // Layer 1
+                    const [l1_1_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'Cyberpunk Style', basePrompt + ', cyberpunk city', 400, 150]
+                    );
+                    const l1_1_Id = l1_1_Res.insertId;
+                    
+                    const [l1_2_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'Watercolor Ver.', basePrompt + ', watercolor style', 400, 450]
+                    );
+                    const l1_2_Id = l1_2_Res.insertId;
+
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [rootId, l1_1_Id]);
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [rootId, l1_2_Id]);
+
+                    // Layer 2
+                    const [l2_1_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'High Detail', basePrompt + ', 8k resolution', 700, 150]
+                    );
+                    const l2_1_Id = l2_1_Res.insertId;
+
+                    const [l2_2_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'Cold Mood', basePrompt + ', cold blue tint', 700, 450]
+                    );
+                    const l2_2_Id = l2_2_Res.insertId;
+
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [l1_1_Id, l2_1_Id]);
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [l1_2_Id, l2_2_Id]);
+
+                    await connection.commit();
+                }
+            } catch (err) {
+                await connection.rollback();
+                console.error("노드 자동 생성 실패:", err);
+            } finally {
+                connection.release();
+            }
+            const [newNodes] = await pool.query(`SELECT * FROM project_nodes WHERE artwork_id = ?`, [artworkId]);
+            nodes = newNodes;
+        }
+
         const [connections] = await pool.query(`
             SELECT nc.from_node_id as 'from', nc.to_node_id as 'to'
             FROM node_connections nc
@@ -435,13 +536,14 @@ app.get('/api/nodes/:artworkId', async (req, res) => {
         `, [artworkId]);
 
         res.json({ success: true, nodes, connections });
+
     } catch (error) {
         console.error("노드 조회 에러:", error);
         res.status(500).json({ success: false, message: "서버 에러" });
     }
 });
 
-// 10. 새 노드 생성
+// 10. 노드 생성
 app.post('/api/nodes', async (req, res) => {
     const { postId, type, title, content, x, y } = req.body;
     try {
@@ -458,7 +560,7 @@ app.post('/api/nodes', async (req, res) => {
     }
 });
 
-// 11. 노드 삭제 API
+// 11. 노드 삭제
 app.delete('/api/nodes/:nodeId', async (req, res) => {
     const { nodeId } = req.params;
     try {
@@ -473,6 +575,97 @@ app.delete('/api/nodes/:nodeId', async (req, res) => {
     } catch (error) {
         console.error("노드 삭제 에러:", error);
         res.status(500).json({ success: false, message: "삭제 실패" });
+    }
+});
+
+// ==========================================
+// [Archive 페이지용 API]
+// ==========================================
+
+// 12. 유저 정보 가져오기 (닉네임 표시용)
+app.get('/api/user-info/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const [rows] = await pool.query(`SELECT nickname FROM users WHERE username = ?`, [userId]);
+        if (rows.length > 0) {
+            res.json({ success: true, nickname: rows[0].nickname });
+        } else {
+            res.json({ success: false, message: "유저 없음" });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// 13. 유저의 구매 목록 가져오기
+app.get('/api/purchases/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const query = `
+            SELECT 
+                a.id, a.title, a.artist_name, a.image_url, a.category,
+                p.purchased_at
+            FROM purchases p
+            JOIN artworks a ON p.artwork_id = a.id
+            WHERE p.user_id = ?
+            ORDER BY p.purchased_at DESC
+        `;
+        const [rows] = await pool.query(query, [userId]);
+        res.json({ success: true, data: rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// 14. [수정됨] 내가 업로드한 작품 가져오기 (async/await 적용)
+app.get('/api/my-uploads/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    console.log(`🔎 [API] 업로드 목록 조회: ID=${userId}`);
+
+    try {
+        // 1. 유저 ID로 닉네임 찾기
+        const [userRows] = await pool.query("SELECT nickname FROM users WHERE username = ?", [userId]);
+        
+        if (userRows.length === 0) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+
+        const nickname = userRows[0].nickname;
+        console.log(`   ➜ 현재 닉네임: ${nickname}`);
+
+        // 2. 해당 닉네임의 작품 조회
+        const [artRows] = await pool.query("SELECT * FROM artworks WHERE artist_name = ? ORDER BY id DESC", [nickname]);
+        
+        console.log(`   ➜ 작품 수: ${artRows.length}개`);
+        res.json({ success: true, data: artRows });
+
+    } catch (err) {
+        console.error("❌ 업로드 목록 조회 에러:", err);
+        res.status(500).json({ success: false, err });
+    }
+});
+
+// 15. [수정됨] 작품 정보 수정하기 (async/await 적용)
+app.put('/api/my-uploads/update', async (req, res) => {
+    const { id, description, price, ai_tool, ai_ratio, prompt, is_public } = req.body;
+    console.log(`📝 [API] 작품 수정 시도: ID=${id}`);
+
+    const sql = `
+        UPDATE artworks 
+        SET description = ?, price = ?, ai_tool = ?, ai_ratio = ?, prompt = ?, is_public = ?
+        WHERE id = ?
+    `;
+    const isPublicVal = is_public ? 1 : 0;
+
+    try {
+        await pool.query(sql, [description, price, ai_tool, ai_ratio, prompt, isPublicVal, id]);
+        console.log("✅ 작품 업데이트 성공");
+        res.json({ success: true, message: 'Updated Successfully' });
+    } catch (err) {
+        console.error("❌ 작품 업데이트 실패:", err);
+        res.json({ success: false, message: 'DB Update Failed' });
     }
 });
 

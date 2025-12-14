@@ -40,7 +40,8 @@ function App() {
             <Route path="/cart" element={<Cart />} />
 
             <Route path="/archive" element={<Archive />} />
-            <Route path="/archive/detail" element={<ArchiveDetail />} />
+           {/* :id 부분이 변수처럼 작동해서 url의 숫자를 받아냅니다 */}
+            <Route path="/archive/detail/:id" element={<ArchiveDetail />} />
 
             <Route path="/upload" element={<Upload />} />
 

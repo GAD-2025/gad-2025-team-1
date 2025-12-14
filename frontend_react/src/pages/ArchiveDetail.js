@@ -1,25 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Header from '../components/Header';
+import { useParams } from 'react-router-dom'; // URL 파라미터 가져오기
+import axios from 'axios'; // DB 통신
 import './ArchiveDetail.css';
 
 const ArchiveDetail = () => {
-    // --- State 관리 ---
+    // --- [Router] URL에서 id 가져오기 ---
+    const { id } = useParams();
+
+    // --- [State] 데이터 상태 관리 ---
     const [activeTab, setActiveTab] = useState('info'); // 'info' | 'edit'
     
-    // 작품 정보 데이터
-    const artworkInfo = {
-        title: '동화의 끝',
-        artist: '404 Creator',
-        createdDate: '25/10/1',
-        modifiedDate: '25/10/4',
-        category: '일러스트',
-        rate: '80%' 
-    };
+    // DB에서 가져온 작품 정보를 저장할 State (초기값 null)
+    const [artworkInfo, setArtworkInfo] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     // 프롬프트 및 편집 상태
-    const [promptText, setPromptText] = useState(`우아한 고양이가 커다란 찻잔 위에 앉아 있으며, 주변에는 커피와 초콜릿, 아이스크림 같은 카페 아이템들이 산재해 있다. 따뜻하고 아늑한 분위기, 파스텔 톤의 색감.`);
+    const [promptText, setPromptText] = useState('');
     const [isEditing, setIsEditing] = useState(false);
-    const [editablePrompt, setEditablePrompt] = useState(promptText);
+    const [editablePrompt, setEditablePrompt] = useState('');
 
     // 채팅 관련 상태
     const [chatMessages, setChatMessages] = useState([
@@ -32,12 +31,51 @@ const ArchiveDetail = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalImage, setModalImage] = useState('');
 
-    // --- 핸들러 함수 ---
+    // --- [Effect] DB 데이터 가져오기 ---
+    useEffect(() => {
+        const fetchArtworkDetail = async () => {
+            try {
+                // API 호출: ID에 해당하는 작품 상세 정보 요청
+                // (백엔드 엔드포인트는 상황에 맞게 수정 필요, 여기선 /api/artwork/:id 로 가정)
+                const response = await axios.get(`http://localhost:5000/api/artwork/${id}`);
+                
+                if (response.data.success) {
+                    const data = response.data.data;
+                    
+                    // DB 데이터를 State에 매핑
+                    setArtworkInfo({
+                        title: data.title,
+                        artist: data.artist_name || 'Unknown', // DB 컬럼명에 맞게 조정
+                        createdDate: new Date(data.created_at).toLocaleDateString(),
+                        modifiedDate: new Date(data.updated_at || data.created_at).toLocaleDateString(),
+                        category: data.category || '일러스트',
+                        rate: data.ai_ratio ? `${data.ai_ratio}` : 'Unknown', // 예: 80%
+                        imageUrl: data.image_url // 이미지 경로
+                    });
+
+                    // 프롬프트 상태 초기화
+                    setPromptText(data.prompt || '프롬프트 정보가 없습니다.');
+                    setEditablePrompt(data.prompt || '');
+                }
+            } catch (error) {
+                console.error("작품 상세 정보 로딩 실패:", error);
+                // 에러 시 더미 데이터 혹은 경고창 (테스트용 더미 데이터 설정 가능)
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (id) {
+            fetchArtworkDetail();
+        }
+    }, [id]);
 
     // 채팅 스크롤 하단 고정
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatMessages]);
+
+    // --- [Handler] 핸들러 함수 ---
 
     const handleTabChange = (tab) => setActiveTab(tab);
 
@@ -46,10 +84,31 @@ const ArchiveDetail = () => {
         setIsEditing(true);
     };
 
-    const handleSaveClick = () => {
-        setPromptText(editablePrompt);
-        setIsEditing(false);
-        alert('프롬프트가 수정된 버전으로 저장되었습니다.');
+    // ★ 프롬프트 DB 저장 핸들러
+    const handleSaveClick = async () => {
+        try {
+            // DB 업데이트 요청
+            const response = await axios.put(`http://localhost:5000/api/artwork/${id}/prompt`, {
+                prompt: editablePrompt
+            });
+
+            if (response.data.success) {
+                setPromptText(editablePrompt);
+                setIsEditing(false);
+                alert('프롬프트가 수정되어 DB에 저장되었습니다.');
+                
+                // 수정된 날짜 등 UI 갱신이 필요하다면 여기서 artworkInfo 업데이트
+                setArtworkInfo(prev => ({
+                    ...prev,
+                    modifiedDate: new Date().toLocaleDateString()
+                }));
+            } else {
+                alert('저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('프롬프트 저장 오류:', error);
+            alert('서버 오류로 저장하지 못했습니다.');
+        }
     };
 
     const handleChatSubmit = (e) => {
@@ -66,12 +125,10 @@ const ArchiveDetail = () => {
         }, 1000);
     };
 
-    // 아이디어 버튼 클릭 처리 (질문 추가됨)
     const handleIdeaClick = (question) => {
         const newUserMsg = { id: Date.now(), sender: 'user', text: question };
         setChatMessages(prev => [...prev, newUserMsg]);
 
-        // AI 응답 시뮬레이션
         setTimeout(() => {
             let answer = '';
             if (question.includes('색상')) {
@@ -81,7 +138,6 @@ const ArchiveDetail = () => {
             } else if (question.includes('판타지')) {
                 answer = '판타지 테마를 위해 "날개가 달린 고양이", "마법 가루가 뿌려진", "신비로운 빛" 같은 키워드를 추가해보세요.';
             } else if (question.includes('없앨')) {
-                // ★ 추가된 질문에 대한 답변 로직
                 answer = '특정 물체를 없애려면 "Negative Prompt(부정 프롬프트)"에 해당 물체의 이름을 적거나, Inpainting 기능을 사용하여 해당 영역을 지우고 다시 생성할 수 있습니다.';
             } else {
                 answer = '좋은 아이디어네요! 프롬프트에 구체적인 묘사를 추가해보세요.';
@@ -98,7 +154,6 @@ const ArchiveDetail = () => {
     };
     const handleModalClose = () => setShowModal(false);
 
-
     // --- 스타일 정의 ---
     const pageLayout = {
         maxWidth: '1200px',
@@ -108,23 +163,19 @@ const ArchiveDetail = () => {
         minHeight: '100vh'
     };
 
-    // ★ 좌측 고정 섹션 스타일 (fixed 적용)
-    // 화면 스크롤과 무관하게 뷰포트에 고정됩니다.
     const leftSectionStyle = {
-        position: 'fixed',    // ★ 요청하신 fix 적용
-        top: '120px',         // 헤더 아래 위치
-        width: '320px',       // 고정 너비 지정
+        position: 'fixed',
+        top: '120px',
+        width: '320px',
         zIndex: 10,
         display: 'flex',
         flexDirection: 'column',
         gap: '20px'
     };
 
-    // ★ 우측 콘텐츠 섹션 스타일
-    // 좌측 섹션이 fixed로 뜨면서 공간을 차지하지 않게 되므로, margin-left로 공간을 만들어줍니다.
     const rightSectionStyle = {
-        marginLeft: '360px',  // ★ 좌측 섹션 너비(320px) + 간격(40px) 확보
-        width: 'calc(100% - 360px)', // 남은 공간 사용
+        marginLeft: '360px',
+        width: 'calc(100% - 360px)',
         display: 'flex',
         flexDirection: 'column',
         gap: '20px',
@@ -151,13 +202,37 @@ const ArchiveDetail = () => {
         color: '#fff'
     };
 
+    // 로딩 중일 때 표시할 UI
+    if (isLoading) {
+        return (
+            <div className="archive-detail-page" style={{ backgroundColor: '#111', minHeight: '100vh', color: 'white' }}>
+                <Header />
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+                    <h2>작품 정보를 불러오는 중입니다...</h2>
+                </div>
+            </div>
+        );
+    }
+
+    // 데이터가 없을 때 (에러 등)
+    if (!artworkInfo) {
+        return (
+            <div className="archive-detail-page" style={{ backgroundColor: '#111', minHeight: '100vh', color: 'white' }}>
+                <Header />
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+                    <h2>작품 정보를 찾을 수 없습니다.</h2>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="archive-detail-page" style={{ backgroundColor: '#111', minHeight: '100vh', color: 'white' }}>
             <div className="starfield-bg"></div>
             <Header />
 
             <main style={pageLayout}>
-                {/* 1. 좌측 섹션: Fixed (화면 고정) */}
+                {/* 1. 좌측 섹션: Fixed (이미지 연동) */}
                 <aside style={leftSectionStyle}>
                     <div 
                         style={{ 
@@ -168,12 +243,14 @@ const ArchiveDetail = () => {
                             border: '1px solid #333',
                             cursor: 'pointer'
                         }}
-                        onClick={() => handleThumbnailClick(`${process.env.PUBLIC_URL}/images/이미지5.png`)}
+                        // DB에서 가져온 이미지 경로 사용 (process.env.PUBLIC_URL 조합)
+                        onClick={() => handleThumbnailClick(`${process.env.PUBLIC_URL}${artworkInfo.imageUrl}`)}
                     >
                         <img 
-                            src={`${process.env.PUBLIC_URL}/images/이미지5.png`} 
+                            src={`${process.env.PUBLIC_URL}${artworkInfo.imageUrl}`} 
                             alt={artworkInfo.title} 
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {e.target.src = 'https://via.placeholder.com/320x320?text=No+Image'}} // 이미지 에러 처리
                         />
                     </div>
                     <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0, color: '#fff' }}>
@@ -181,7 +258,7 @@ const ArchiveDetail = () => {
                     </h1>
                 </aside>
 
-                {/* 2. 우측 섹션: 스크롤 가능 (margin-left로 위치 잡음) */}
+                {/* 2. 우측 섹션: 정보 연동 */}
                 <section style={rightSectionStyle}>
                     <div style={{ display: 'flex', borderBottom: '1px solid #333' }}>
                         <button style={tabButtonStyle(activeTab === 'info')} onClick={() => handleTabChange('info')}>
@@ -199,12 +276,12 @@ const ArchiveDetail = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '15px', lineHeight: '1.6' }}>
                                 <span style={{ color: '#aaa' }}>제목</span><span>{artworkInfo.title}</span>
                                 <span style={{ color: '#aaa' }}>작가</span><span>{artworkInfo.artist}</span>
-                                <span style={{ color: '#aaa' }}>구매일</span><span>{artworkInfo.createdDate}</span>
+                                <span style={{ color: '#aaa' }}>생성일</span><span>{artworkInfo.createdDate}</span>
                                 <span style={{ color: '#aaa' }}>최종 수정일</span><span>{artworkInfo.modifiedDate}</span>
                                 <span style={{ color: '#aaa' }}>카테고리</span><span>{artworkInfo.category}</span>
                                 <span style={{ color: '#aaa' }}>자체 제작률</span><span>{artworkInfo.rate}</span>
                                 <span style={{ color: '#aaa' }}>프롬프트</span>
-                                <span style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '4px', fontSize: '0.9em' }}>
+                                <span style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '4px', fontSize: '0.9em', wordBreak: 'break-all' }}>
                                     {promptText}
                                 </span>
                             </div>
@@ -240,7 +317,7 @@ const ArchiveDetail = () => {
                                         style={{ width: '100%', height: '150px', backgroundColor: '#222', color: '#fff', border: '1px solid #FF6B00', borderRadius: '8px', padding: '15px', lineHeight: '1.6', fontSize: '15px', resize: 'vertical' }}
                                     />
                                 ) : (
-                                    <div style={{ minHeight: '150px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '15px', lineHeight: '1.6', fontSize: '15px', whiteSpace: 'pre-wrap' }}>
+                                    <div style={{ minHeight: '150px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '15px', lineHeight: '1.6', fontSize: '15px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                                         {promptText}
                                     </div>
                                 )}
@@ -249,7 +326,6 @@ const ArchiveDetail = () => {
                             <div style={{ ...infoBoxStyle, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <h3 style={{ margin: 0, color: '#FF6B00' }}>아이디어 PLUS +</h3>
                                 
-                                {/* 질문 버튼 리스트 (4번째 질문 추가 완료) */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                                     {[
                                         "물체의 색상을 바꾸고 싶으면 어떻게 하나요?",

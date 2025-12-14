@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-// ★ 1. Link를 여기서 꼭 불러와야 에러가 안 납니다!
-import { Link } from 'react-router-dom'; 
+// ★ 1. Link와 useNavigate를 불러옵니다.
+import { Link, useNavigate } from 'react-router-dom'; 
 import Header from '../components/Header';
 import './MySpace.css';
 
 const MySpace = () => {
+    const navigate = useNavigate(); // ★ 페이지 이동을 위한 훅
+
     const [userData, setUserData] = useState({
         name: 'Guest', // 기본값
         bio: '로그인이 필요합니다.',
@@ -17,14 +19,15 @@ const MySpace = () => {
         { id: 3, name: 'ART', img: '/images/folder_3.jpg', link: '/art-folder' }
     ]);
 
+    // ★ 궤도 아이템 데이터 (나중에 DB에서 가져온 데이터로 대체될 수 있습니다)
     const [orbitArtworks, setOrbitArtworks] = useState([
-        { id: 1, img: '/images/art_5.jpg', link: '/node/1', orbit: 'outer', orientation: 'horizontal' },
-        { id: 2, img: '/images/art_6.jpg', link: '/myspace/node', orbit: 'outer', orientation: 'horizontal' },
-        { id: 3, img: '/images/art_7.jpg', link: '/node/3', orbit: 'outer', orientation: 'horizontal' },
-        { id: 4, img: '/images/art_1.jpg', link: '/node/4', orbit: 'outer', orientation: 'vertical' },
-        { id: 5, img: '/images/art_2.jpg', link: '/node/5', orbit: 'inner', orientation: 'vertical' },
-        { id: 6, img: '/images/art_3.jpg', link: '/node/6', orbit: 'inner', orientation: 'vertical' },
-        { id: 7, img: '/images/art_4.jpg', link: '/node/7', orbit: 'inner', orientation: 'vertical' }
+        { id: 1, img: '/images/art_5.jpg', title: 'Work 1', orbit: 'outer', orientation: 'horizontal' },
+        { id: 2, img: '/images/art_6.jpg', title: 'Work 2', orbit: 'outer', orientation: 'horizontal' },
+        { id: 3, img: '/images/art_7.jpg', title: 'Work 3', orbit: 'outer', orientation: 'horizontal' },
+        { id: 4, img: '/images/art_1.jpg', title: 'Work 4', orbit: 'outer', orientation: 'vertical' },
+        { id: 5, img: '/images/art_2.jpg', title: 'Work 5', orbit: 'inner', orientation: 'vertical' },
+        { id: 6, img: '/images/art_3.jpg', title: 'Work 6', orbit: 'inner', orientation: 'vertical' },
+        { id: 7, img: '/images/art_4.jpg', title: 'Work 7', orbit: 'inner', orientation: 'vertical' }
     ]);
 
     const neighbors = [
@@ -64,6 +67,20 @@ const MySpace = () => {
             }
         }
     }, []);
+
+    // ★ 궤도 아이템 클릭 핸들러 (새로 추가됨)
+    const handleOrbitClick = (artwork) => {
+        // /myspacenode 페이지로 이동하면서 데이터를 state에 담아 보냅니다.
+        navigate('/myspacenode', {
+            state: {
+                nodeData: {
+                    id: artwork.id,      // 작품 ID (DB 연동용)
+                    title: artwork.title || `Artwork ${artwork.id}`,
+                    img: artwork.img     // 원본 이미지 경로
+                }
+            }
+        });
+    };
 
     const outerOrbitArtworks = orbitArtworks.filter(art => art.orbit === 'outer');
     const innerOrbitArtworks = orbitArtworks.filter(art => art.orbit === 'inner');
@@ -137,29 +154,32 @@ const MySpace = () => {
                         ))}
                     </div>
 
+                    {/* ★ 궤도 영역 (수정됨: Link -> div + onClick) */}
                     <div className="artwork-orbit-area">
                         <div className="orbit orbit-outer">
                             {outerOrbitArtworks.map((artwork, index) => (
-                                <Link
+                                <div
                                     key={artwork.id}
-                                    to={artwork.link}
                                     className={`artwork-item item-${index + 1} ${artwork.orientation}`}
                                     title={`작품 ${artwork.id}`}
+                                    onClick={() => handleOrbitClick(artwork)} // 클릭 시 핸들러 실행
+                                    style={{ cursor: 'pointer' }} // 마우스 포인터 모양 변경
                                 >
                                     <img src={artwork.img} alt={`작품 ${artwork.id}`} />
-                                </Link>
+                                </div>
                             ))}
                         </div>
                         <div className="orbit orbit-inner">
                             {innerOrbitArtworks.map((artwork, index) => (
-                                <Link
+                                <div
                                     key={artwork.id}
-                                    to={artwork.link}
                                     className={`artwork-item item-${index + 5} ${artwork.orientation}`}
                                     title={`작품 ${artwork.id}`}
+                                    onClick={() => handleOrbitClick(artwork)} // 클릭 시 핸들러 실행
+                                    style={{ cursor: 'pointer' }}
                                 >
                                     <img src={artwork.img} alt={`작품 ${artwork.id}`} />
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     </div>
