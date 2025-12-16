@@ -8,6 +8,7 @@ const Archive = () => {
     const navigate = useNavigate();
     
     // --- [State] 데이터 상태 ---
+    const [currentUser, setCurrentUser] = useState(null); // 로그인 유저 정보
     const [userNickname, setUserNickname] = useState('');
     
     // 1. 상단 그리드용 (구매한 작품)
@@ -39,19 +40,38 @@ const Archive = () => {
     const [scrollTop, setScrollTop] = useState(0);
 
     const mainColor = '#FF6B00';
-    const currentUserId = 'admin'; // 현재 로그인 유저 (DB의 username과 일치해야 함)
 
     // =========================================================
-    // [Function] 데이터 가져오기 (재사용을 위해 함수로 분리)
+    // [초기화] 세션에서 유저 정보 가져오기
     // =========================================================
-    const fetchAllData = async () => {
+    useEffect(() => {
+        const storedUser = sessionStorage.getItem('currentUser');
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setCurrentUser(parsedUser);
+            // 유저 정보가 확인되면 데이터 가져오기 시작
+            fetchAllData(parsedUser.username); 
+        } else {
+            alert("로그인이 필요합니다.");
+            navigate('/login');
+        }
+    }, [navigate]);
+
+    // =========================================================
+    // [Function] 데이터 가져오기
+    // =========================================================
+    const fetchAllData = async (username) => {
+        if (!username) return;
+        setIsLoading(true);
+
         try {
-            // 1. 유저 닉네임
-            const userRes = await axios.get(`http://localhost:5000/api/user-info/${currentUserId}`);
+            // 1. 유저 닉네임 가져오기
+            const userRes = await axios.get(`http://localhost:5000/api/user-info/${username}`);
             if (userRes.data.success) setUserNickname(userRes.data.nickname);
 
             // 2. 구매 목록 가져오기 (상단 그리드)
-            const purchaseRes = await axios.get(`http://localhost:5000/api/purchases/${currentUserId}`);
+            // ★ 중요: username으로 요청 보냄
+            const purchaseRes = await axios.get(`http://localhost:5000/api/purchases/${username}`);
             if (purchaseRes.data.success) {
                 const mappedPurchases = purchaseRes.data.data.map(item => ({
                     ...item,
@@ -62,24 +82,13 @@ const Archive = () => {
             }
 
             // 3. 내 업로드 목록 가져오기 (하단 슬라이더)
-            const uploadRes = await axios.get(`http://localhost:5000/api/my-uploads/${currentUserId}`);
+            const uploadRes = await axios.get(`http://localhost:5000/api/my-uploads/${username}`);
             if (uploadRes.data.success) {
                 setUploadedArtworks(uploadRes.data.data);
                 
-                // 처음 로딩 시, 선택된 항목이 없으면 첫 번째 항목 선택
-                // 단, 저장 후 리로딩일 때는 기존 선택 유지 로직이 필요할 수 있음
                 if (!selectedUploadId && uploadRes.data.data.length > 0) {
                     const firstItem = uploadRes.data.data[0];
-                    setSelectedUploadId(firstItem.id);
-                    setSelectedUploadData({
-                        title: firstItem.title,
-                        description: firstItem.description || '',
-                        price: firstItem.price || '',
-                        ai_tool: firstItem.ai_tool || '',
-                        ai_ratio: firstItem.ai_ratio || '',
-                        prompt: firstItem.prompt || '',
-                        is_public: firstItem.is_public === 1 // DB에서 1은 true
-                    });
+                    handleUploadSelect(firstItem);
                 }
             }
 
@@ -89,11 +98,6 @@ const Archive = () => {
             setIsLoading(false);
         }
     };
-
-    // 초기 로딩
-    useEffect(() => {
-        fetchAllData();
-    }, []);
 
     // --- [Handler] 하단 슬라이더 이미지 클릭 시 폼 데이터 업데이트 ---
     const handleUploadSelect = (item) => {
@@ -134,11 +138,12 @@ const Archive = () => {
 
             if (res.data.success) {
                 alert('성공적으로 저장되었습니다!');
-                // 저장 후 목록을 다시 불러와서 최신 상태 유지 (가격 변경 등이 리스트에도 반영되도록)
-                // 단, 현재 선택된 폼 데이터는 유지
-                const uploadRes = await axios.get(`http://localhost:5000/api/my-uploads/${currentUserId}`);
-                if (uploadRes.data.success) {
-                    setUploadedArtworks(uploadRes.data.data);
+                // 저장 후 목록 갱신
+                if (currentUser) {
+                    const uploadRes = await axios.get(`http://localhost:5000/api/my-uploads/${currentUser.username}`);
+                    if (uploadRes.data.success) {
+                        setUploadedArtworks(uploadRes.data.data);
+                    }
                 }
             } else {
                 alert('저장에 실패했습니다.');
@@ -152,7 +157,7 @@ const Archive = () => {
     const handleDashboardClick = () => navigate('/setting');
     const togglePublic = () => setSelectedUploadData(prev => ({ ...prev, is_public: !prev.is_public }));
 
-    // 페이지네이션
+    // 페이지네이션 로직
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentGridItems = purchasedArtworks.slice(indexOfFirstItem, indexOfLastItem);
@@ -196,13 +201,20 @@ const Archive = () => {
     const renderArtworkGrid = () => (
         <section className="artwork-grid-container">
             {purchasedArtworks.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>구매한 작품이 없습니다.</div>
+                <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+                    <p style={{marginBottom: '10px'}}>보관함이 비어있습니다.</p>
+                    {/* 탐색 페이지로 이동하는 버튼 추가 */}
+                    <Link to="/explore" style={{color: mainColor, fontWeight: 'bold'}}>
+                        작품 탐색하러 가기 &gt;
+                    </Link>
+                </div>
             ) : (
                 <div className="artwork-grid">
                     {currentGridItems.map(art => (
                         <Link to={`/archive/detail/${art.id}`} key={art.id} className="artwork-link">
                             <div className="artwork-item">
-                                <img src={`${process.env.PUBLIC_URL}${art.image_url}`} alt={art.title} className="item-thumbnail" />
+                                <img src={art.image_url} alt={art.title} className="item-thumbnail" 
+                                     onError={(e) => {e.target.src = 'https://via.placeholder.com/300?text=No+Image'}} />
                                 <div className="item-info">
                                     <p className="item-title">{art.title}</p>
                                     <p className="item-artist">Artist: {art.artist_name}</p>
@@ -234,7 +246,7 @@ const Archive = () => {
             <main className="archive-container">
                 {/* 상단 헤더 */}
                 <div className="archive-header">
-                    <h1 className="archive-title">{userNickname ? `${userNickname}'s Library` : 'Library'}</h1>
+                    <h1 className="archive-title">{userNickname ? `${userNickname}'s Library` : 'My Library'}</h1>
                     <div className="archive-count">
                         <span className="count-number">{purchasedArtworks.length}</span>
                         <span className="count-label">보관 중인 작품</span>
@@ -260,7 +272,7 @@ const Archive = () => {
                 {/* 하단: 작품 관리 섹션 (내가 업로드한 작품) */}
                 <section className="new-dashboard-section">
                     <div className="management-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h2 className="management-title">작품 관리)</h2>
+                        <h2 className="management-title">작품 관리</h2>
                         <button className="dashboard-check-btn" onClick={handleDashboardClick}>수익 대시보드 확인하기 &gt;</button>
                     </div>
 
@@ -282,7 +294,7 @@ const Archive = () => {
                                                      className={`image-item ${selectedUploadId === item.id ? 'selected' : ''}`} 
                                                      onClick={() => handleUploadSelect(item)}
                                                      style={{ textAlign: 'center', flexShrink: 0 }}>
-                                                    <img src={`${process.env.PUBLIC_URL}${item.image_url}`} alt={item.title} className="small-image" 
+                                                    <img src={item.image_url} alt={item.title} className="small-image" 
                                                          style={{ width: selectedUploadId === item.id ? '120px' : '70px', height: selectedUploadId === item.id ? '120px' : '70px', objectFit: 'cover', borderRadius: '8px', border: selectedUploadId === item.id ? `3px solid ${mainColor}` : '1px solid #ddd', transition: 'all 0.3s ease' }} />
                                                 </div>
                                             ))
@@ -293,7 +305,7 @@ const Archive = () => {
                                 </div>
                             </div>
 
-                            {/* 우측 입력 폼: 선택된 작품 정보 표시 */}
+                            {/* 우측 입력 폼 */}
                             <div className="info-form" style={{ flex: 1 }}>
                                 <div className="info-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                                     <h3 className="artwork-info-title" style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>

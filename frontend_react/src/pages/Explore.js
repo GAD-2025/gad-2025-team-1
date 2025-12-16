@@ -1,27 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext'; 
+import { useUser } from '../context/UserContext'; 
+import Header from '../components/Header'; 
 
-const Explore = () => {
+const Explore = ({ refreshInventory }) => { // App.js에서 refreshInventory를 넘겨준다면 받음 (없어도 작동함)
     const { addToCart, removeFromCart, isInCart, cartItems } = useCart();
     const navigate = useNavigate();
 
     // ----------------------------------------------------------------------
     // 상태 관리
     // ----------------------------------------------------------------------
+    const [currentUser, setCurrentUser] = useState(null); // ★ [추가] 로그인 유저 상태
+
     const [artworks, setArtworks] = useState([]); // 전체 데이터 (서버 원본)
     const [filteredData, setFilteredData] = useState([]); // 화면에 보여줄 데이터
     const [weeklyBest, setWeeklyBest] = useState([]); // 금주의 추천
     
     // UI 및 검색 상태
-    const [keyword, setKeyword] = useState(""); // 입력창 값
-    const [searchQuery, setSearchQuery] = useState(""); // 실제 검색 확정된 값
+    const [keyword, setKeyword] = useState(""); 
+    const [searchQuery, setSearchQuery] = useState(""); 
     const [selectedArtwork, setSelectedArtwork] = useState(null);
-    const [loading, setLoading] = useState(true); // 초기 데이터 로딩
-    const [isSearching, setIsSearching] = useState(false); // 검색 중 로딩
+    const [loading, setLoading] = useState(true); 
+    const [isSearching, setIsSearching] = useState(false); 
     
     const [recentSearches, setRecentSearches] = useState([]);
     const [showRecentDropdown, setShowRecentDropdown] = useState(false);
+
+    // ----------------------------------------------------------------------
+    // 0. 로그인 정보: UserContext 사용 (세션스토리지 대신 Context로 통합)
+    // ----------------------------------------------------------------------
+    const { user, deductCoins } = useUser();
 
     // ----------------------------------------------------------------------
     // 1. 서버 데이터 가져오기
@@ -45,7 +54,7 @@ const Explore = () => {
                 }));
 
                 setArtworks(formattedData);
-                setFilteredData(formattedData); // 초기엔 전체 표시
+                setFilteredData(formattedData); 
                 setWeeklyBest(formattedData.filter(item => item.isWeekly));
 
             } catch (error) {
@@ -61,19 +70,18 @@ const Explore = () => {
     }, []);
 
     // ----------------------------------------------------------------------
-    // 2. 검색 로직 (검색 버튼 눌렀을 때만 실행)
+    // 2. 검색 로직
     // ----------------------------------------------------------------------
     const executeSearch = (query) => {
         if (!query.trim()) {
-            setFilteredData(artworks); // 검색어 없으면 전체 목록 복구
+            setFilteredData(artworks); 
             setSearchQuery("");
             return;
         }
 
-        setIsSearching(true); // 로딩 시작 (검색 중...)
+        setIsSearching(true); 
         setSearchQuery(query);
 
-        // 실제 검색 엔진처럼 0.5초 딜레이 후 결과 표시
         setTimeout(() => {
             const result = artworks.filter(item => 
                 item.title.toLowerCase().includes(query.toLowerCase()) || 
@@ -81,10 +89,9 @@ const Explore = () => {
                 (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())))
             );
             setFilteredData(result);
-            setIsSearching(false); // 로딩 끝
+            setIsSearching(false); 
         }, 500);
 
-        // 최근 검색어 저장
         const newSearches = [query, ...recentSearches.filter(k => k !== query)].slice(0, 5);
         setRecentSearches(newSearches);
         localStorage.setItem('recentSearches', JSON.stringify(newSearches));
@@ -94,33 +101,23 @@ const Explore = () => {
     // ----------------------------------------------------------------------
     // 3. 핸들러 함수들
     // ----------------------------------------------------------------------
-    
-    // 검색 버튼 클릭 핸들러
-    const handleSearchClick = () => {
-        executeSearch(keyword);
-    };
+    const handleSearchClick = () => executeSearch(keyword);
 
-    // 엔터키 핸들러
     const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            executeSearch(keyword);
-        }
+        if (e.key === 'Enter') executeSearch(keyword);
     };
 
-    // 최근 검색어 클릭 핸들러
     const handleRecentClick = (tag) => {
         setKeyword(tag);
         executeSearch(tag);
     };
 
-    // 태그 클릭 핸들러
     const handleTagClick = (tag) => {
         const cleanTag = tag.replace('#', '');
         setKeyword(cleanTag);
         executeSearch(cleanTag);
     };
 
-    // 모달 및 구매 핸들러들 (기존 유지)
     const handleCardClick = (item) => setSelectedArtwork(item);
     const handleCloseModal = () => setSelectedArtwork(null);
     
@@ -134,33 +131,61 @@ const Explore = () => {
         }
     };
 
+    // ★★★ [수정됨] 구매하기 핸들러 (UserContext 이용, 프론트에서 선 차감) ★★★
     const handleModalBuy = async () => {
         if (!selectedArtwork) return;
-        const userId = localStorage.getItem('userId') || 'admin';
 
-        if (!window.confirm(`'${selectedArtwork.title}' 작품을 구매하시겠습니까?\n(${selectedArtwork.price} 차감)`)) return;
+        // 1. 로그인 체크
+        if (!user) {
+            alert("로그인이 필요한 서비스입니다.");
+            return;
+        }
+
+        // 2. 구매 확인 (현재 잔액 표시)
+        if (!window.confirm(
+            `'${selectedArtwork.title}' 작품을 구매하시겠습니까?\n` +
+            `가격: ${selectedArtwork.price} 차감\n` +
+            `현재 잔액: ${user.coins.toLocaleString()}C`
+        )) return;
+
+        // 3. 코인 차감 시도 (프론트엔드 선 차감)
+        const priceNumber = parseInt(String(selectedArtwork.priceValue).replace(/,/g, ''), 10); // 숫자 변환
+        const isSuccess = deductCoins(priceNumber); // ★ 코인 차감 실행!
+
+        if (!isSuccess) return; // 잔액 부족 시 중단
 
         try {
+            // 4. 서버 요청 (기존 코드 유지)
             const response = await fetch('http://localhost:5000/api/purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, artworkId: selectedArtwork.id, price: selectedArtwork.priceValue })
+                body: JSON.stringify({ 
+                    userId: user.username, 
+                    artworkId: selectedArtwork.id, 
+                    price: priceNumber
+                })
             });
             const data = await response.json();
 
             if (data.success) {
+                // 장바구니에 있다면 제거
                 if (isInCart(selectedArtwork.id)) removeFromCart(selectedArtwork.id);
-                if (window.confirm(`구매 완료! 🎉 (잔액: ${data.leftCoins}C)\n\n[확인] -> 작품 보관함으로 이동\n[취소] -> 계속 둘러보기`)) {
+                
+                // 만약 App.js에서 갱신 함수를 받았다면 실행
+                if (refreshInventory) await refreshInventory();
+
+                // 여기서 navigate('/archive') 등 수행
+                if (window.confirm(`구매가 완료되었습니다! 🎉\n\n[확인] -> 작품 보관함으로 이동\n[취소] -> 계속 둘러보기`)) {
                     navigate('/archive');
                 } else {
                     setSelectedArtwork(null);
                 }
             } else {
                 alert(`구매 실패: ${data.message}`);
+                // 실패 시 코인 롤백 로직이 필요할 수 있으나, 일단 간단히 처리
             }
         } catch (error) {
             console.error("구매 오류:", error);
-            alert("서버 연결 실패");
         }
     };
 
@@ -199,24 +224,7 @@ const Explore = () => {
         <div className="min-h-screen bg-[#050505] text-white font-sans relative">
             <div className="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=2013')] bg-cover opacity-20 pointer-events-none"></div>
 
-            {/* 헤더 */}
-            <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link to="/" className="text-2xl font-extrabold text-orange-600">creAItive</Link>
-                    <nav className="hidden md:flex space-x-8">
-                        <Link to="/marketplace" className="text-gray-400 hover:text-white transition">거래하기</Link>
-                        <Link to="/archive" className="text-gray-400 hover:text-white transition">작품 보관함</Link>
-                        <Link to="/myspace" className="text-gray-400 hover:text-white transition">마이스페이스</Link>
-                        <Link to="/setting" className="text-gray-400 hover:text-white transition">설정</Link>
-                    </nav>
-                    <div className="flex items-center gap-4">
-                        <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
-                            🛒 <span className="text-orange-500 text-xs font-bold">{cartItems.length}</span>
-                        </div>
-                        <button className="bg-orange-600 px-4 py-1.5 rounded font-bold text-sm">로그인</button>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             <main className="relative z-10 max-w-7xl mx-auto px-4 py-10">
                 {/* 1. 메인 배너 & 검색창 */}
@@ -233,7 +241,7 @@ const Explore = () => {
                             onChange={(e) => setKeyword(e.target.value)}
                             onFocus={() => setShowRecentDropdown(true)}
                             onBlur={() => setTimeout(() => setShowRecentDropdown(false), 200)}
-                            onKeyPress={handleKeyPress} // ★ 엔터키 적용
+                            onKeyPress={handleKeyPress} 
                             placeholder="작품명, 작가, 태그 검색..." 
                             className="w-full bg-white text-black py-4 px-6 rounded-full text-lg focus:outline-none shadow-[0_0_20px_rgba(255,100,0,0.3)]"
                         />
@@ -267,13 +275,11 @@ const Explore = () => {
 
                 {/* 2. 컨텐츠 영역 (로딩 or 검색결과 or 추천화면) */}
                 {isSearching ? (
-                    // [로딩 상태] 검색 중일 때 표시
                     <div className="text-center py-20">
                         <div className="inline-block w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                         <p className="text-gray-400 text-lg">'{keyword}' 검색 중...</p>
                     </div>
                 ) : searchQuery ? (
-                    // [검색 결과 화면] 검색어가 확정되었을 때만 표시
                     <section>
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold">🔍 '{searchQuery}' 검색 결과</h2>
@@ -301,7 +307,6 @@ const Explore = () => {
                         </div>
                     </section>
                 ) : (
-                    // [기본 화면] 추천작 + 카테고리별 섹션
                     <>
                         <section className="mb-16">
                             <div className="flex items-end gap-3 mb-6">
@@ -325,7 +330,7 @@ const Explore = () => {
 
                         <div className="border-t border-gray-800 pt-12">
                             <h2 className="text-center text-2xl font-bold mb-2">테마별 컬렉션</h2>
-                            <p className="text-center text-gray-500 text-sm mb-12">다양한 테마로 구성된 컬렉션을 탐색하며 새로운 영감을 얻어보세요</p>
+                            <p className="text-center text-gray-500 text-sm mb-12">AI 아트 큐레이터가 필요한 상황에 맞춰 작품을 엄선했어요. </p>
 
                             {renderCategorySection("🎨 이미지 생성", "이미지 생성", "bg-green-600")}
                             {renderCategorySection("📱 어플 디자인", "어플 디자인", "bg-yellow-600")}
