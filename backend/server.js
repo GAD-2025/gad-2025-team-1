@@ -377,21 +377,125 @@ app.post('/api/artworks/upload', upload.single('image'), async (req, res) => {
     }
 });
 
-// 9. 노드 관련 API (기존 유지)
+// 9. 노드 및 연결선 가져오기
 app.get('/api/nodes/:artworkId', async (req, res) => {
     const { artworkId } = req.params;
     try {
-        let [nodes] = await pool.query(`SELECT * FROM project_nodes WHERE artwork_id = ?`, [artworkId]);
+        let [nodes] = await pool.query(
+            `SELECT * FROM project_nodes WHERE artwork_id = ?`, 
+            [artworkId]
+        );
+        
+        // 노드가 없으면 기본 트리 자동 생성
         if (nodes.length === 0) {
-            // ... (노드 자동 생성 로직 생략 - 기존과 동일하게 작동하도록 유지) ...
-            // 간단하게 빈 배열 반환하거나 자동생성 로직 실행
-            res.json({ success: true, nodes: [], connections: [] }); 
+            const connection = await pool.getConnection();
+            try {
+                await connection.beginTransaction();
+
+                const [artInfo] = await connection.query(`SELECT title, prompt FROM artworks WHERE id = ?`, [artworkId]);
+                
+                if (artInfo.length > 0) {
+                    const { title, prompt } = artInfo[0];
+                    const basePrompt = prompt || '프롬프트 없음';
+
+                    // Layer 0 (Root)
+                    const [rootRes] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'original', title, basePrompt, 100, 300]
+                    );
+                    const rootId = rootRes.insertId;
+
+                    // Layer 1
+                    const [l1_1_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'Cyberpunk Style', basePrompt + ', cyberpunk city', 400, 150]
+                    );
+                    const l1_1_Id = l1_1_Res.insertId;
+                    
+                    const [l1_2_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'Watercolor Ver.', basePrompt + ', watercolor style', 400, 450]
+                    );
+                    const l1_2_Id = l1_2_Res.insertId;
+
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [rootId, l1_1_Id]);
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [rootId, l1_2_Id]);
+
+                    // Layer 2
+                    const [l2_1_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'High Detail', basePrompt + ', 8k resolution', 700, 150]
+                    );
+                    const l2_1_Id = l2_1_Res.insertId;
+
+                    const [l2_2_Res] = await connection.query(
+                        `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [artworkId, 'modified', 'Cold Mood', basePrompt + ', cold blue tint', 700, 450]
+                    );
+                    const l2_2_Id = l2_2_Res.insertId;
+
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [l1_1_Id, l2_1_Id]);
+                    await connection.query(`INSERT INTO node_connections (from_node_id, to_node_id) VALUES (?, ?)`, [l1_2_Id, l2_2_Id]);
+
+                    await connection.commit();
+                }
+            } catch (err) {
+                await connection.rollback();
+                console.error("노드 자동 생성 실패:", err);
+            } finally {
+                connection.release();
+            }
+            const [newNodes] = await pool.query(`SELECT * FROM project_nodes WHERE artwork_id = ?`, [artworkId]);
+            nodes = newNodes;
+        }
+
+        const [connections] = await pool.query(`
+            SELECT nc.from_node_id as 'from', nc.to_node_id as 'to'
+            FROM node_connections nc
+            JOIN project_nodes pn ON nc.from_node_id = pn.id
+            WHERE pn.artwork_id = ?
+        `, [artworkId]);
+
+        res.json({ success: true, nodes, connections });
+
+    } catch (error) {
+        console.error("노드 조회 에러:", error);
+        res.status(500).json({ success: false, message: "서버 에러" });
+    }
+});
+
+// 10. 노드 생성
+app.post('/api/nodes', async (req, res) => {
+    const { postId, type, title, content, x, y } = req.body;
+    try {
+        const sql = `INSERT INTO project_nodes (artwork_id, type, title, content, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?)`;
+        const [result] = await pool.query(sql, [postId, type, title, content, x, y]);
+        
+        res.json({ 
+            success: true, 
+            newNode: { id: result.insertId, artwork_id: postId, type, title, content, position_x: x, position_y: y } 
+        });
+    } catch (error) {
+        console.error("노드 생성 에러:", error);
+        res.status(500).json({ success: false, message: "노드 생성 실패" });
+    }
+});
+
+// 11. 노드 삭제
+app.delete('/api/nodes/:nodeId', async (req, res) => {
+    const { nodeId } = req.params;
+    try {
+        const sql = `DELETE FROM project_nodes WHERE id = ?`;
+        const [result] = await pool.query(sql, [nodeId]);
+        
+        if (result.affectedRows > 0) {
+             res.json({ success: true, message: "삭제 성공" });
         } else {
-            const [connections] = await pool.query(`SELECT from_node_id as 'from', to_node_id as 'to' FROM node_connections WHERE from_node_id IN (SELECT id FROM project_nodes WHERE artwork_id = ?)`, [artworkId]);
-            res.json({ success: true, nodes, connections });
+             res.status(404).json({ success: false, message: "노드를 찾을 수 없습니다." });
         }
     } catch (error) {
-        res.status(500).json({ success: false });
+        console.error("노드 삭제 에러:", error);
+        res.status(500).json({ success: false, message: "삭제 실패" });
     }
 });
 
