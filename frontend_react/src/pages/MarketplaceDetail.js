@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useCart } from '../context/CartContext'; 
 import { useUser } from '../context/UserContext'; 
 
-// [수정] App.js에서 전달한 props(user, refreshInventory)를 받습니다.
 const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
     const { id } = useParams(); 
     const navigate = useNavigate();
@@ -13,16 +12,10 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
     const [artwork, setArtwork] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // 로컬 user state (App.js에서 안 넘어올 경우를 대비한 백업)
     const [localUser, setLocalUser] = useState(null);
-
-    // 실제 사용할 유저 정보 (props로 받은게 있으면 그거 쓰고, 없으면 로컬꺼 씀)
     const currentUser = propUser || localUser;
-
-    // UserContext 사용 (Explore와 동일한 방식)
     const { user, deductCoins } = useUser();
 
-    // load user from sessionStorage (App.js에서 못 받았을 경우 대비)
     useEffect(() => {
         if (!propUser) {
             try {
@@ -34,9 +27,15 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
         }
     }, [propUser]);
 
-    // ----------------------------------------------------------------------
-    // 1. 서버에서 데이터 가져오기 (DB 연동)
-    // ----------------------------------------------------------------------
+    // ★ [Helper] 이미지 경로 처리 함수 (상세페이지용)
+    const getImageUrl = (url) => {
+        if (!url) return 'https://via.placeholder.com/300?text=No+Image';
+        if (url.startsWith('/uploads/')) {
+            return `http://localhost:5000${url}`;
+        }
+        return url;
+    };
+
     useEffect(() => {
         window.scrollTo(0, 0);
 
@@ -60,7 +59,8 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
                         price: foundItem.price, 
                         priceDisplay: `${foundItem.price.toLocaleString()} C`,
                         category: foundItem.category,
-                        img: foundItem.image_url,
+                        // ★ 이미지 URL 변환 적용
+                        img: getImageUrl(foundItem.image_url),
                         description: foundItem.description || "이 작품은 AI 알고리즘과 작가의 리터칭이 결합된 고퀄리티 아트워크입니다.",
                         tags: foundItem.tags ? foundItem.tags.split(',') : ["#AI", "#Digital"],
                         creationRate: 60 + (foundItem.id % 40),
@@ -81,84 +81,66 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
         fetchDetail();
     }, [id, navigate]);
 
-    // ----------------------------------------------------------------------
-    // 2. 구매하기 버튼 핸들러 (서버 API 연동)
-    // ----------------------------------------------------------------------
     const handlePurchase = async () => {
-    // 1. 로그인 체크
-    if (!currentUser) {
-        alert("로그인이 필요한 서비스입니다.");
-        return;
-    }
-
-    // 2. 작품 정보 체크
-    if (!artwork) {
-        alert("작품 정보를 불러오는 중입니다.");
-        return;
-    }
-
-    const safePrice = artwork.price ? artwork.price : 0;
-
-    // 3. 구매 의사 확인
-    const isConfirmed = window.confirm(
-        `'${artwork.title}' 작품을 구매하시겠습니까?\n가격: ${safePrice.toLocaleString()} Point`
-    );
-
-    if (!isConfirmed) return;
-
-    // 프론트에서 선 차감: UserContext의 deductCoins 사용
-    const priceNumber = parseInt(String(safePrice).replace(/,/g, ''), 10) || 0;
-
-    // 사용자 정보는 Context의 user가 우선, 없으면 currentUser 사용
-    const buyer = user || currentUser;
-
-    if (!buyer) {
-        alert("로그인이 필요한 서비스입니다.");
-        return;
-    }
-
-    // deductCoins 호출 (잔액 부족 시 중단)
-    if (deductCoins) {
-        const ok = deductCoins(priceNumber);
-        if (!ok) return;
-    }
-
-    try {
-        // 백엔드에 구매 요청 (userId는 username을 보냄)
-        const response = await fetch('http://localhost:5000/api/purchase', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: buyer.username, // ★ 중요: 구매는 username(예: 'kim123')으로 기록됨
-                artworkId: artwork.id, 
-                price: priceNumber
-            }),
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // [수정됨] 구매 성공 후 이동 여부 묻기
-            if (window.confirm("구매가 완료되었습니다!\n[작품 보관함]으로 이동해서 확인하시겠습니까?")) {
-                
-                // 만약 App.js에서 받은 갱신 함수가 있다면 실행 (선택사항)
-                if (refreshInventory) await refreshInventory();
-                
-                // 보관함 페이지로 이동
-                navigate('/archive'); 
-            } else {
-                // 이동 안 할 경우 그냥 갱신만 수행
-                if (refreshInventory) await refreshInventory();
-            }
-
-        } else {
-            alert(result.message); // "이미 소유한 작품입니다" 등
+        if (!currentUser) {
+            alert("로그인이 필요한 서비스입니다.");
+            return;
         }
-    } catch (error) {
-        console.error("구매 요청 실패:", error);
-        alert("서버 연결에 실패했습니다.");
-    }
-};
+
+        if (!artwork) {
+            alert("작품 정보를 불러오는 중입니다.");
+            return;
+        }
+
+        const safePrice = artwork.price ? artwork.price : 0;
+
+        const isConfirmed = window.confirm(
+            `'${artwork.title}' 작품을 구매하시겠습니까?\n가격: ${safePrice.toLocaleString()} Point`
+        );
+
+        if (!isConfirmed) return;
+
+        const priceNumber = parseInt(String(safePrice).replace(/,/g, ''), 10) || 0;
+        const buyer = user || currentUser;
+
+        if (!buyer) {
+            alert("로그인이 필요한 서비스입니다.");
+            return;
+        }
+
+        if (deductCoins) {
+            const ok = deductCoins(priceNumber);
+            if (!ok) return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5000/api/purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: buyer.username, 
+                    artworkId: artwork.id, 
+                    price: priceNumber
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (window.confirm("구매가 완료되었습니다!\n[작품 보관함]으로 이동해서 확인하시겠습니까?")) {
+                    if (refreshInventory) await refreshInventory();
+                    navigate('/archive'); 
+                } else {
+                    if (refreshInventory) await refreshInventory();
+                }
+            } else {
+                alert(result.message); 
+            }
+        } catch (error) {
+            console.error("구매 요청 실패:", error);
+            alert("서버 연결에 실패했습니다.");
+        }
+    };
 
     if (loading) {
         return (
@@ -197,7 +179,9 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
                     <div className="space-y-6">
                         <div className="bg-white p-3 rounded-3xl shadow-2xl">
                             <div className="aspect-square w-full rounded-2xl overflow-hidden bg-gray-900 flex items-center justify-center relative">
-                                <img src={artwork.img} alt={artwork.title} className="w-full h-full object-cover" />
+                                {/* 이미지 경로 함수 적용 */}
+                                <img src={artwork.img} alt={artwork.title} className="w-full h-full object-cover" 
+                                     onError={(e)=>{e.target.src='https://via.placeholder.com/600?text=No+Image'}} />
                             </div>
                         </div>
 
@@ -230,7 +214,7 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
                             </div>
                         </div>
 
-                        {/* 3. 대형 구매하기 버튼 */}
+                        {/* 구매하기 버튼 */}
                         <div 
                             onClick={handlePurchase} 
                             className="bg-orange-500 rounded-2xl p-1 flex items-center justify-between shadow-lg hover:bg-orange-600 transition cursor-pointer group"

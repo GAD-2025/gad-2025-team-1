@@ -16,27 +16,47 @@ const Marketplace = () => {
     const [artworks, setArtworks] = useState([]); // 전체 데이터
     const [filteredArtworks, setFilteredArtworks] = useState([]); // 필터링 결과
     
-    // 검색 상태 (탐색 페이지와 동일한 로직 적용)
-    const [keyword, setKeyword] = useState(""); // 입력값
-    const [searchQuery, setSearchQuery] = useState(""); // 실제 검색값
-    const [isSearching, setIsSearching] = useState(false); // 로딩 상태
+    // 검색 상태
+    const [keyword, setKeyword] = useState(""); 
+    const [searchQuery, setSearchQuery] = useState(""); 
+    const [isSearching, setIsSearching] = useState(false); 
 
     // 필터 상태
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [sortCriteria, setSortCriteria] = useState('recent');
     const [minPrice, setMinPrice] = useState(0);
-    const [maxPrice, setMaxPrice] = useState(10000);
+    const [maxPrice, setMaxPrice] = useState(100000); // 가격 범위 넉넉하게 수정
 
     // 페이지네이션
     const itemsPerPage = 20; 
     const [currentPage, setCurrentPage] = useState(1);
 
-    const categories = ['All', '이미지 생성', '어플 디자인', '마케팅 배너', '일러스트'];
+    const categories = ['All', '이미지 생성', '어플 디자인', '마케팅 배너', '일러스트', '3D', '사진', '아이콘', '템플릿']; // 카테고리 추가
+
+    // ★ [Helper 1] 이미지 경로 처리 함수
+    const getImageUrl = (url) => {
+        if (!url) return 'https://via.placeholder.com/300?text=No+Image';
+        if (url.startsWith('/uploads/')) {
+            return `http://localhost:5000${url}`;
+        }
+        return url;
+    };
+
+    // ★ [Helper 2] NEW 배지 판별 함수 (3일 이내)
+    const isNewItem = (dateString) => {
+        if (!dateString) return false;
+        const createdDate = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now - createdDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        return diffDays <= 3; 
+    };
 
     // 1. 서버 데이터 가져오기
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // 백엔드는 이미 최신순(ORDER BY id DESC)으로 줍니다.
                 const response = await fetch('http://localhost:5000/api/artworks');
                 const dbData = await response.json();
 
@@ -51,9 +71,11 @@ const Marketplace = () => {
                     views: item.views || 0,
                     likes: 0,
                     date: item.created_at,
-                    img: item.image_url,
-                    aiModel: "AI Generated",
-                    badge: index < 5 ? "NEW" : null
+                    // ★ 이미지 URL 변환 적용
+                    img: getImageUrl(item.image_url),
+                    aiModel: item.ai_tool || "AI Generated",
+                    // ★ 날짜 기반 NEW 배지 적용
+                    badge: isNewItem(item.created_at) ? "NEW" : null
                 }));
 
                 setArtworks(formattedData);
@@ -65,18 +87,16 @@ const Marketplace = () => {
         fetchData();
     }, []);
 
-    // 2. 검색 실행 함수 (0.5초 딜레이 리얼함 추가)
+    // 2. 검색 실행 함수
     const executeSearch = () => {
         setIsSearching(true);
-        // 검색어가 없으면 전체 목록 복구
         if (!keyword.trim()) {
             setSearchQuery("");
             setIsSearching(false);
             return;
         }
-
         setSearchQuery(keyword);
-        setTimeout(() => setIsSearching(false), 500); // 0.5초 후 결과 표시
+        setTimeout(() => setIsSearching(false), 500); 
     };
 
     const handleKeyPress = (e) => {
@@ -89,7 +109,7 @@ const Marketplace = () => {
 
         let result = [...artworks];
 
-        // 검색어 필터 (searchQuery 기준)
+        // 검색어 필터
         if (searchQuery) {
             result = result.filter(art => 
                 art.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -115,7 +135,7 @@ const Marketplace = () => {
         }
 
         setFilteredArtworks(result);
-        setCurrentPage(1); // 필터가 바뀌면 1페이지로 리셋
+        setCurrentPage(1); 
     }, [searchQuery, selectedCategory, sortCriteria, minPrice, maxPrice, artworks]);
 
     // 4. 페이지네이션 계산
@@ -182,8 +202,8 @@ const Marketplace = () => {
                 <div className="flex flex-col lg:flex-row gap-8 items-start">
                     {/* 사이드바 필터 */}
                     <aside className="w-full lg:w-64 bg-black/60 p-6 rounded-xl border border-gray-800 backdrop-blur-sm sticky top-24">
-                        <div className="flex justify-between items-center mb-4"><h3 className="text-white font-bold">필터</h3><button onClick={() => {setMinPrice(0); setMaxPrice(10000);}} className="text-xs text-orange-500">초기화</button></div>
-                        <div className="mb-6"><label className="text-xs text-gray-400 font-bold mb-2 block">가격 범위</label><input type="range" min="0" max="10000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500"/><div className="text-right text-xs text-gray-500 mt-1">0C ~ {maxPrice}C</div></div>
+                        <div className="flex justify-between items-center mb-4"><h3 className="text-white font-bold">필터</h3><button onClick={() => {setMinPrice(0); setMaxPrice(100000);}} className="text-xs text-orange-500">초기화</button></div>
+                        <div className="mb-6"><label className="text-xs text-gray-400 font-bold mb-2 block">가격 범위</label><input type="range" min="0" max="100000" step="1000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500"/><div className="text-right text-xs text-gray-500 mt-1">0C ~ {maxPrice.toLocaleString()}C</div></div>
                     </aside>
 
                     {/* 그리드 영역 */}
@@ -215,10 +235,14 @@ const Marketplace = () => {
                                                 className="group block bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-gray-500 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative cursor-pointer"
                                             >
                                                 <div className="aspect-square w-full relative overflow-hidden bg-gray-800">
-                                                    <img src={art.img} alt={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                                                    {/* 이미지 소스 처리 */}
+                                                    <img src={art.img} alt={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" 
+                                                         onError={(e)=>{e.target.src='https://via.placeholder.com/300?text=No+Image'}} />
+                                                    
                                                     <button onClick={(e) => handleHeartClick(e, art)} className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-black/40 backdrop-blur-md hover:bg-white/20 transition border border-white/10">
                                                         <span className={`text-lg ${isAdded ? "text-red-500" : "text-white"}`}>{isAdded ? "♥" : "♡"}</span>
                                                     </button>
+                                                    {/* NEW 배지 */}
                                                     {art.badge && <span className="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">{art.badge}</span>}
                                                 </div>
                                                 <div className="p-3">
@@ -241,7 +265,7 @@ const Marketplace = () => {
                             </div>
                         )}
 
-                        {/* 페이지네이션 복구 */}
+                        {/* 페이지네이션 */}
                         {!isSearching && filteredArtworks.length > itemsPerPage && (
                             <div className="flex justify-center items-center mt-12 gap-4">
                                 <button 

@@ -39,32 +39,49 @@ const ArchiveDetail = () => {
         const fetchArtworkDetail = async () => {
             setIsLoading(true);
             try {
-                // 1. 전체 작품 목록 가져오기 (백엔드에 단일 조회 API가 없으므로)
+                // 1. 전체 작품 목록 가져오기
                 const response = await axios.get('http://localhost:5000/api/artworks');
                 
-                if (response.data) {
-                    // 2. URL의 id와 일치하는 작품 찾기
-                    const targetId = parseInt(id); // URL id는 문자열이므로 숫자로 변환
-                    const data = response.data.find(item => item.id === targetId);
+                // [디버깅용] 브라우저 콘솔(F12)에서 실제 들어오는 데이터 형태를 확인하세요!
+                console.log("전체 작품 데이터:", response.data);
 
-                    if (data) {
-                        // 3. 찾은 데이터를 State에 저장
+                if (response.data) {
+                    // 2. URL의 id와 일치하는 작품 찾기 (수정됨)
+                    // URL의 id는 문자열이고, DB의 id는 숫자일 수도 문자열일 수도 있으므로
+                    // 둘 다 String으로 변환해서 비교하는 것이 가장 안전합니다.
+                    const targetData = response.data.find(item => String(item.id) === String(id));
+
+                    if (targetData) {
+                        console.log("찾은 작품 정보:", targetData); // [디버깅용]
+
+                        // 3. 찾은 데이터를 State에 저장 (수정됨)
+                        // 백엔드에서 이미지 경로가 'image_url', 'imageUrl', 'file_path' 중 뭐로 올지 모르니 다 체크
+                        // 또한 경로가 'uploads/...' 처럼 상대 경로로 올 경우를 대비해 처리
+                        let rawImageUrl = targetData.image_url || targetData.imageUrl || targetData.file_path || '';
+                        
+                        // 만약 이미지가 http로 시작하지 않고, 파일명만 있다면 서버 주소 붙이기 (필요시)
+                        // (이미지 경로가 온전한 URL로 온다면 이 부분은 건너뛰어도 됩니다)
+                        if (rawImageUrl && !rawImageUrl.startsWith('http') && !rawImageUrl.startsWith('data:')) {
+                            rawImageUrl = `http://localhost:5000${rawImageUrl.startsWith('/') ? '' : '/'}${rawImageUrl}`;
+                        }
+
                         setArtworkInfo({
-                            id: data.id,
-                            title: data.title,
-                            artist: data.artist_name || 'Unknown',
-                            createdDate: new Date(data.created_at).toLocaleDateString(),
-                            // updated_at이 없으면 created_at 사용
-                            modifiedDate: data.updated_at ? new Date(data.updated_at).toLocaleDateString() : new Date(data.created_at).toLocaleDateString(),
-                            category: data.category || '일러스트',
-                            rate: data.ai_ratio ? `${data.ai_ratio}` : 'Unknown',
-                            imageUrl: data.image_url 
+                            id: targetData.id,
+                            title: targetData.title || '제목 없음', // 제목이 비어있을 경우 대비
+                            artist: targetData.artist_name || targetData.author || 'Unknown',
+                            createdDate: targetData.created_at ? new Date(targetData.created_at).toLocaleDateString() : '날짜 정보 없음',
+                            modifiedDate: targetData.updated_at ? new Date(targetData.updated_at).toLocaleDateString() : new Date().toLocaleDateString(),
+                            category: targetData.category || 'Etc',
+                            rate: targetData.ai_ratio ? `${targetData.ai_ratio}` : 'Unknown',
+                            imageUrl: rawImageUrl // 가공된 이미지 URL
                         });
-                        setPromptText(data.prompt || '프롬프트 정보가 없습니다.');
-                        setEditablePrompt(data.prompt || '');
+
+                        setPromptText(targetData.prompt || '프롬프트 정보가 없습니다.');
+                        setEditablePrompt(targetData.prompt || '');
                     } else {
+                        console.warn(`ID가 ${id}인 작품을 찾을 수 없습니다.`);
                         alert("해당 작품을 찾을 수 없습니다.");
-                        navigate('/archive'); // 목록으로 튕겨내기
+                        navigate('/archive'); 
                     }
                 }
             } catch (error) {

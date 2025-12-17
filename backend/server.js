@@ -326,10 +326,11 @@ app.put('/api/myspace/save', async (req, res) => {
     }
 });
 
-// 8. 전체 작품 목록 조회 (탐색 페이지용)
+// 8. 전체 작품 목록 조회 (탐색 페이지용) - 최신순 정렬 추가
 app.get('/api/artworks', async (req, res) => {
     try {
-        const [rows] = await pool.query("SELECT * FROM artworks");
+        // ★ [수정됨] 최신 작품이 먼저 나오도록 id DESC 정렬 추가
+        const [rows] = await pool.query("SELECT * FROM artworks ORDER BY id DESC");
         res.json(rows);
     } catch (error) {
         console.error("작품 목록 로딩 실패:", error);
