@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext'; 
 import { useUser } from '../context/UserContext'; 
 import Header from '../components/Header'; 
@@ -7,6 +7,7 @@ import Header from '../components/Header';
 const Explore = ({ refreshInventory }) => { // App.js에서 refreshInventory를 넘겨준다면 받음 (없어도 작동함)
     const { addToCart, removeFromCart, isInCart, cartItems } = useCart();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // ----------------------------------------------------------------------
     // 상태 관리
@@ -72,6 +73,21 @@ const Explore = ({ refreshInventory }) => { // App.js에서 refreshInventory를 
     // ----------------------------------------------------------------------
     // 2. 검색 로직
     // ----------------------------------------------------------------------
+
+    // ----------------------------------------------------------------------
+    // ★ [핵심 수정] 로고 클릭 등으로 페이지 재진입 시 검색어 초기화
+    // ----------------------------------------------------------------------
+    useEffect(() => {
+        // location 객체 전체를 의존성으로 넣으면, 
+        // 같은 페이지('/' -> '/')로 이동해도 location.key가 바뀌므로 실행됩니다.
+        setKeyword("");
+        setSearchQuery("");
+        setIsSearching(false);
+        // artworks가 로드된 상태라면 전체 목록으로 복구
+        if(artworks.length > 0) setFilteredData(artworks);
+        
+    }, [location]); // ★★★ 여기가 핵심 변경 사항입니다! ★★★
+
     const executeSearch = (query) => {
         if (!query.trim()) {
             setFilteredData(artworks); 
