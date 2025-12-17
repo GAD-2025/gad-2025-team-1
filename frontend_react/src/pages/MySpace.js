@@ -4,7 +4,6 @@ import Header from '../components/Header';
 import './MySpace.css';
 
 const MySpace = () => {
-    // ... (상태값 및 useEffect는 기존과 동일) ...
     const [userData, setUserData] = useState({
         name: 'Guest',
         bio: '로그인이 필요합니다.',
@@ -34,8 +33,26 @@ const MySpace = () => {
         { id: 'star', href: '#', icon: 'fas fa-star' }
     ];
 
+    // ★ [핵심 수정] 이미지 경로 보정 함수 강화
+    // 정적 이미지(/images/)와 업로드 이미지(백엔드)를 구분합니다.
+    const getFullImageUrl = (path) => {
+        if (!path) return `${process.env.PUBLIC_URL}/images/no_image.jpg`; // 기본 이미지
+        
+        // 1. 이미 완전한 URL이거나 데이터 URI(미리보기)인 경우 -> 그대로 반환
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+
+        // 2. [기존 이미지 살리기] 경로가 '/images/'로 시작하면 프론트엔드 public 폴더의 파일임
+        // -> 서버 주소(localhost:5000)를 붙이면 안 됨!
+        if (path.startsWith('/images/') || path.startsWith('images/')) {
+            return path.startsWith('/') ? path : `/${path}`;
+        }
+
+        // 3. [업로드 이미지 살리기] 그 외(백엔드 uploads 등)는 서버 주소 붙이기
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `http://localhost:5000${cleanPath}`;
+    };
+
     useEffect(() => {
-        // ... (API 호출 부분 기존과 동일) ...
         const storedUser = sessionStorage.getItem('currentUser');
         if (storedUser) {
             const user = JSON.parse(storedUser);
@@ -43,17 +60,27 @@ const MySpace = () => {
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {
-                        const dbImage = user.profile_image;
-                        const defaultImg = `${process.env.PUBLIC_URL}/images/profile_basic.jpg`;
-                        let finalImage = defaultImg;
-                        if (dbImage && dbImage !== "") {
-                             finalImage = dbImage.startsWith('http') ? dbImage : 
-                                         (dbImage.startsWith('/') ? dbImage : `${process.env.PUBLIC_URL}${dbImage}`);
-                        }
-                        setUserData({ name: user.nickname, bio: user.bio || '', img: finalImage });
-                        setFolders(data.folders.map(f => ({ ...f, img: f.thumb, link: `/myspace/folder/${f.id}` })));
+                        // 1. 프로필 이미지 처리
+                        const finalProfileImage = getFullImageUrl(user.profile_image);
+                        
+                        setUserData({ 
+                            name: user.nickname, 
+                            bio: user.bio || '', 
+                            img: finalProfileImage 
+                        });
+
+                        // 2. 폴더 썸네일 처리
+                        setFolders(data.folders.map(f => ({ 
+                            ...f, 
+                            img: getFullImageUrl(f.thumb), // 여기서 경로 변환
+                            link: `/myspace/folder/${f.id}` 
+                        })));
+
+                        // 3. 궤도(Orbit) 작품 이미지 처리
                         setOrbitArtworks(data.orbit.map((imgUrl, i) => ({
-                            id: i, img: imgUrl, link: '/myspace/node', 
+                            id: i, 
+                            img: getFullImageUrl(imgUrl), // 여기서 경로 변환
+                            link: '/myspace/node', 
                             orbit: i % 2 === 0 ? 'outer' : 'inner', 
                             orientation: i % 2 === 0 ? 'horizontal' : 'vertical'
                         })));
@@ -90,10 +117,6 @@ const MySpace = () => {
         }
     };
 
-    // ★ [핵심 수정] 궤도별 회전 계산 (패럴랙스 효과)
-    // 1. outerRotation: 마우스 방향 그대로, 속도 0.6배 (천천히 돔)
-    // 2. innerRotation: 마우스 반대 방향(-), 속도 0.8배 (반대로 빠르게 돔)
-    // -> 이렇게 하면 두 궤도가 서로 엇갈리며 지나가서 "개별적으로 움직이는 느낌"이 납니다.
     const outerRotation = rotation * 0.6;
     const innerRotation = rotation * -0.8;
 
@@ -104,7 +127,6 @@ const MySpace = () => {
 
             <main className="myspace-container">
                 <section className="section-profile">
-                    {/* ... (프로필 영역 기존과 동일) ... */}
                     <div className="profile-visual-area" style={{ position: 'relative', height: '450px', width: '100%', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: '50%', left: '50%', width: '0px', height: '0px' }}>
                             <div className="profile-image-wrapper" style={{ position: 'absolute', transform: 'translate(-50%, -50%)', width: '220px', height: '220px', borderRadius: '50%', zIndex: 20 }}>
@@ -145,7 +167,7 @@ const MySpace = () => {
                     <div className="folder-icons-container">
                         {folders.map(folder => (
                             <Link key={folder.id} to={folder.link} state={{ folderData: folder }} className="folder-item">
-                                <div className="folder-icon-circle"><img src={folder.img} alt={folder.name} /></div>
+                                <div className="folder-icon-circle"><img src={folder.img} alt={folder.name} onError={(e)=>{e.target.src='/images/folder_basic.jpg'}} /></div>
                                 <span className="folder-name">{folder.name}</span>
                             </Link>
                         ))}
@@ -159,50 +181,18 @@ const MySpace = () => {
                         onMouseLeave={handleMouseUp}
                         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                     >
-                        {/* ★ 바깥 궤도 (Outer Orbit) 
-                            - 회전: outerRotation (정방향, 느림)
-                            - 자식 역회전: -outerRotation (각도 유지)
-                        */}
-                        <div 
-                            className="orbit orbit-outer"
-                            style={{ transform: `rotate(${outerRotation}deg)` }}
-                        >
+                        <div className="orbit orbit-outer" style={{ transform: `rotate(${outerRotation}deg)` }}>
                             {outerOrbitArtworks.map((art, i) => (
-                                <Link 
-                                    key={i} 
-                                    to={art.link} 
-                                    state={{ nodeData: art }} 
-                                    className={`artwork-item item-${i+1} ${art.orientation}`}
-                                    onClick={handleLinkClick} 
-                                    draggable="false"
-                                    // 자식이 부모의 회전을 상쇄해야 하므로 정확히 반대값 적용
-                                    style={{ transform: `rotate(${-outerRotation}deg)` }} 
-                                >
-                                    <img src={art.img} alt="art" draggable="false" />
+                                <Link key={i} to={art.link} state={{ nodeData: art }} className={`artwork-item item-${i+1} ${art.orientation}`} onClick={handleLinkClick} draggable="false" style={{ transform: `rotate(${-outerRotation}deg)` }}>
+                                    <img src={art.img} alt="art" draggable="false" onError={(e)=>{e.target.style.display='none'}} />
                                 </Link>
                             ))}
                         </div>
 
-                        {/* ★ 안쪽 궤도 (Inner Orbit)
-                            - 회전: innerRotation (역방향, 빠름) -> 엇갈리는 효과 발생
-                            - 자식 역회전: -innerRotation (각도 유지)
-                        */}
-                        <div 
-                            className="orbit orbit-inner"
-                            style={{ transform: `rotate(${innerRotation}deg)` }}
-                        >
+                        <div className="orbit orbit-inner" style={{ transform: `rotate(${innerRotation}deg)` }}>
                             {innerOrbitArtworks.map((art, i) => (
-                                <Link 
-                                    key={i} 
-                                    to={art.link} 
-                                    state={{ nodeData: art }} 
-                                    className={`artwork-item item-${i+5} ${art.orientation}`}
-                                    onClick={handleLinkClick} 
-                                    draggable="false"
-                                    // 마찬가지로 부모(innerRotation)의 반대값을 적용
-                                    style={{ transform: `rotate(${-innerRotation}deg)` }}
-                                >
-                                    <img src={art.img} alt="art" draggable="false" />
+                                <Link key={i} to={art.link} state={{ nodeData: art }} className={`artwork-item item-${i+5} ${art.orientation}`} onClick={handleLinkClick} draggable="false" style={{ transform: `rotate(${-innerRotation}deg)` }}>
+                                    <img src={art.img} alt="art" draggable="false" onError={(e)=>{e.target.style.display='none'}} />
                                 </Link>
                             ))}
                         </div>
@@ -215,7 +205,6 @@ const MySpace = () => {
             </main>
             
             {showFriendModal && (
-                /* ... (모달 동일) ... */
                 <div className="modal-overlay active" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <div className="modal-content" style={{ backgroundColor: 'white', padding: '30px', borderRadius: '15px', textAlign: 'center', maxWidth: '400px', width: '90%' }}>
                         <p style={{marginBottom: '20px', fontSize: '16px', lineHeight: '1.5'}}>친구의 스페이스로 이동합니다.<br/><span style={{color: '#888', fontSize: '14px'}}>(구현 예정인 기능입니다.)</span></p>
