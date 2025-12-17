@@ -110,7 +110,7 @@ const Archive = () => {
     const getImageUrl = (url) => {
         if (!url) return 'https://via.placeholder.com/300?text=No+Image';
         if (url.startsWith('/uploads/')) {
-            return `http://localhost:5000${url}`;
+            return `${process.env.REACT_APP_API_BASE_URL}${url}`;
         }
         return url; 
     };
@@ -133,11 +133,11 @@ const Archive = () => {
 
         try {
             // 유저 정보
-            const userRes = await axios.get(`http://localhost:5000/api/user-info/${username}`);
+            const userRes = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user-info/${username}`);
             if (userRes.data.success) setUserNickname(userRes.data.nickname);
 
             // 구매 목록
-            const purchaseRes = await axios.get(`http://localhost:5000/api/purchases/${username}`);
+            const purchaseRes = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/purchases/${username}`);
             if (purchaseRes.data.success) {
                 const mappedPurchases = purchaseRes.data.data.map(item => ({
                     ...item,
@@ -148,7 +148,7 @@ const Archive = () => {
             }
 
             // 내 업로드 목록
-            const uploadRes = await axios.get(`http://localhost:5000/api/my-uploads/${username}`);
+            const uploadRes = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/my-uploads/${username}`);
             
             let realUploads = [];
             if (uploadRes.data.success) {
@@ -215,7 +215,7 @@ const Archive = () => {
                 is_public: selectedUploadData.is_public ? 1 : 0
             };
 
-            const res = await axios.put('http://localhost:5000/api/my-uploads/update', payload);
+            const res = await axios.put(process.env.REACT_APP_API_BASE_URL + '/api/my-uploads/update', payload);
 
             if (res.data.success) {
                 alert('성공적으로 저장되었습니다!');

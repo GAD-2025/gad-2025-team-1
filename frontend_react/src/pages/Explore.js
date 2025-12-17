@@ -40,7 +40,7 @@ const Explore = ({ refreshInventory }) => { // App.js에서 refreshInventory를 
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await fetch('http://localhost:5000/api/artworks');
+                const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/artworks');
                 if (!response.ok) throw new Error('서버 연결 실패');
                 const dbData = await response.json();
 
@@ -172,7 +172,7 @@ const Explore = ({ refreshInventory }) => { // App.js에서 refreshInventory를 
 
         try {
             // 4. 서버 요청 (기존 코드 유지)
-            const response = await fetch('http://localhost:5000/api/purchase', {
+            const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

@@ -37,7 +37,7 @@ const Marketplace = () => {
     const getImageUrl = (url) => {
         if (!url) return 'https://via.placeholder.com/300?text=No+Image';
         if (url.startsWith('/uploads/')) {
-            return `http://localhost:5000${url}`;
+            return `${process.env.REACT_APP_API_BASE_URL}${url}`;
         }
         return url;
     };
@@ -57,7 +57,7 @@ const Marketplace = () => {
         const fetchData = async () => {
             try {
                 // 백엔드는 이미 최신순(ORDER BY id DESC)으로 줍니다.
-                const response = await fetch('http://localhost:5000/api/artworks');
+                const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/artworks');
                 const dbData = await response.json();
 
                 const formattedData = dbData.map((item, index) => ({

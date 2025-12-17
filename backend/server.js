@@ -7,6 +7,25 @@ const path = require('path');
 const fs = require('fs'); // ★ 파일 시스템 접근
 const app = express();
 
+// --- CORS 설정 시작 ---
+const allowedOrigins = [
+  'http://localhost:3000',            // 로컬에서 개발할 때 (React 기본 포트)
+  'https://gad-2025-team1.web.app'    // 실제 배포된 사이트 주소
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // 요청한 주소(origin)가 목록에 있거나, 아예 없으면(서버 내부 통신 등) 허용
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS 정책에 의해 차단되었습니다.'));
+    }
+  },
+  credentials: true // 로그인 쿠키 등을 주고받으려면 필수
+}));
+// --- CORS 설정 끝 ---
+
 const PORT = 5000;
 const saltRounds = 10;
 
