@@ -11,7 +11,7 @@ const MySpaceSetting = () => {
         id: '',
         name: "",
         bio: "",
-        img: "/images/White Cats.jpg",
+        img: "/images/profile_basic.jpg", // 기본 프로필 사진 설정
         folders: [],
         orbit: []
     });
@@ -42,11 +42,11 @@ const MySpaceSetting = () => {
                         id: user.username,
                         name: user.nickname,
                         bio: user.bio || '',
-                        img: user.profile_image || '/images/White Cats.jpg',
-                        folders: data.folders || [], // DB에서 온 폴더 구조
-                        orbit: data.orbit || []      // DB에서 온 궤도 목록
+                        img: user.profile_image || '/images/profile_basic.jpg', // DB 없으면 기본값
+                        folders: data.folders || [], 
+                        orbit: data.orbit || []      
                     });
-                    setInventory(data.inventory || []); // DB에서 온 보유 작품
+                    setInventory(data.inventory || []); 
                 }
             })
             .catch(err => console.error(err));
@@ -72,13 +72,29 @@ const MySpaceSetting = () => {
         const newFolder = {
             id: newFolderId,
             name: "새 폴더",
-            thumb: "/images/art_1.jpg", // 기본 썸네일 (보유작품 중 하나로 설정)
+            thumb: "/images/folder_basic.jpg", 
             works: []
         };
         
         // 폴더 목록에 추가하고 바로 편집 모달 열기
         setMyData(prev => ({ ...prev, folders: [...prev.folders, newFolder] }));
         openFolderEdit(newFolderId);
+    };
+
+    // ★ 폴더 삭제 기능 (추가됨)
+    const deleteFolder = () => {
+        if (!currentEditingFolderId) return;
+
+        // 사용자에게 확인 받기
+        if (window.confirm("정말로 이 폴더를 삭제하시겠습니까? \n폴더 안의 내용도 함께 삭제됩니다.")) {
+            // 현재 편집 중인 ID를 제외한 나머지 폴더만 남김
+            const newFolders = myData.folders.filter(f => f.id !== currentEditingFolderId);
+            setMyData(prev => ({ ...prev, folders: newFolders }));
+            
+            // 모달 닫기 및 초기화
+            setFolderEditModal(false);
+            setCurrentEditingFolderId(null);
+        }
     };
 
     // ★ 폴더 이름 변경
@@ -130,13 +146,6 @@ const MySpaceSetting = () => {
 
     const openPicker = (mode) => {
         setPickerMode(mode);
-        // 폴더 모드일 때는 폴더 편집 모달을 잠시 숨김 (피커 뒤에 깔리지 않게 하거나, z-index 처리)
-        // 여기서는 UX상 폴더 모달을 닫지 않고 피커를 위에 띄우는 것이 좋으나, 
-        // 간단한 구현을 위해 모달 상태 관리
-        if (mode === 'folder') {
-             // 폴더 편집 모달 위에 피커가 뜨도록 z-index를 CSS로 조정하거나,
-             // 현재 구조상 그냥 띄워도 됨 (피커가 더 뒤에 렌더링되므로)
-        }
         setImagePickerModal(true);
     };
 
@@ -154,7 +163,6 @@ const MySpaceSetting = () => {
             });
             setMyData(prev => ({ ...prev, folders: newFolders }));
             setImagePickerModal(false);
-            // 폴더 편집 모달은 계속 열려있어야 함
             setFolderEditModal(true);
         }
     };
@@ -223,7 +231,7 @@ const MySpaceSetting = () => {
                                 </div>
                             ))}
                             
-                            {/* ★ 폴더 추가 버튼 (새로 생성) */}
+                            {/* 폴더 추가 버튼 */}
                             <div className="folder-add-btn" onClick={createNewFolder} style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', 
                                 border: '2px dashed #ccc', borderRadius: '10px', 
@@ -244,7 +252,6 @@ const MySpaceSetting = () => {
                                     <button className="btn-delete-orbit" onClick={() => deleteOrbitWork(index)}><i className="fas fa-minus"></i></button>
                                 </div>
                             ))}
-                            {/* 궤도 작품 추가 버튼 */}
                             <div className="orbit-add-btn" onClick={() => openPicker('orbit')}><i className="fas fa-plus"></i></div>
                         </div>
                     </section>
@@ -256,7 +263,7 @@ const MySpaceSetting = () => {
                 </div>
             </main>
 
-            {/* 이미지 피커 모달 (보유 작품 art_1 ~ art_7 선택) */}
+            {/* 이미지 피커 모달 */}
             {imagePickerModal && (
                 <div className="modal-overlay active" style={{zIndex: 2000}}>
                     <div className="modal-content">
@@ -280,7 +287,7 @@ const MySpaceSetting = () => {
                 </div>
             )}
 
-            {/* 폴더 편집 모달 */}
+            {/* 폴더 편집 모달 (삭제 기능 포함) */}
             {folderEditModal && currentFolder && (
                  <div className="modal-overlay active" style={{zIndex: 1000}}>
                     <div className="modal-content">
@@ -312,11 +319,24 @@ const MySpaceSetting = () => {
                                     <button className="btn-delete-orbit" onClick={() => deleteFolderWork(idx)}><i className="fas fa-minus"></i></button>
                                 </div>
                             ))}
-                            {/* 폴더 내 작품 추가 버튼 */}
                             <div className="orbit-add-btn" onClick={() => openPicker('folder')}><i className="fas fa-plus"></i></div>
                         </div>
                         
-                        <div style={{marginTop: '20px', textAlign: 'right'}}>
+                        {/* 하단 버튼 영역 (삭제 버튼 추가됨) */}
+                        <div style={{marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                             {/* 삭제 버튼 */}
+                             <button 
+                                className="btn-delete-folder" 
+                                onClick={deleteFolder} 
+                                style={{
+                                    backgroundColor: '#ff4d4d', color: 'white', border: 'none', 
+                                    padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '13px'
+                                }}
+                            >
+                                <i className="fas fa-trash" style={{marginRight:'5px'}}></i> 폴더 삭제
+                            </button>
+                            
+                            {/* 완료 버튼 */}
                             <button className="btn-action btn-save" onClick={() => setFolderEditModal(false)} style={{padding: '8px 20px', fontSize: '14px'}}>완료</button>
                         </div>
                     </div>

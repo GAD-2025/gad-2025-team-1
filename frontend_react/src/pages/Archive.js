@@ -70,7 +70,6 @@ const Archive = () => {
             if (userRes.data.success) setUserNickname(userRes.data.nickname);
 
             // 2. 구매 목록 가져오기 (상단 그리드)
-            // ★ 중요: username으로 요청 보냄
             const purchaseRes = await axios.get(`http://localhost:5000/api/purchases/${username}`);
             if (purchaseRes.data.success) {
                 const mappedPurchases = purchaseRes.data.data.map(item => ({
@@ -177,7 +176,7 @@ const Archive = () => {
     };
     
     const handleMouseUp = () => { 
-        setIsDown(false);
+        setIsDown(false); 
         setTimeout(() => setIsDragging(false), 0); 
     };
     
@@ -203,7 +202,6 @@ const Archive = () => {
             {purchasedArtworks.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
                     <p style={{marginBottom: '10px'}}>보관함이 비어있습니다.</p>
-                    {/* 탐색 페이지로 이동하는 버튼 추가 */}
                     <Link to="/explore" style={{color: mainColor, fontWeight: 'bold'}}>
                         작품 탐색하러 가기 &gt;
                     </Link>
@@ -257,13 +255,9 @@ const Archive = () => {
                     </div>
                 </div>
 
-                {/* 필터 및 업로드 버튼 */}
+                {/* 필터 바 (업로드 버튼 제거됨) */}
                 <div className="filter-bar" style={{ display: 'flex', alignItems: 'center' }}>
                     <button className={`filter-btn ${activeFilter === '내 작품 목록' ? 'active' : ''}`}>내 작품 목록</button>
-                    <div className="upload-group" onClick={handleUploadClick} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
-                        <span style={{ fontSize: '16px', fontWeight: '500' }}>작품 업로드</span>
-                        <div style={{ width: '32px', height: '32px', backgroundColor: mainColor, borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: '24px', fontWeight: 'bold', paddingBottom: '4px' }}>+</div>
-                    </div>
                 </div>
 
                 {/* 상단: 구매한 작품 그리드 */}
@@ -271,9 +265,20 @@ const Archive = () => {
 
                 {/* 하단: 작품 관리 섹션 (내가 업로드한 작품) */}
                 <section className="new-dashboard-section">
+                    {/* ★ 수정된 부분: 작품 업로드 버튼을 이곳으로 이동 */}
                     <div className="management-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h2 className="management-title">작품 관리</h2>
-                        <button className="dashboard-check-btn" onClick={handleDashboardClick}>수익 대시보드 확인하기 &gt;</button>
+                        
+                        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                            {/* 옮겨진 업로드 버튼 */}
+                            <div className="upload-group" onClick={handleUploadClick} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
+                                <span style={{ fontSize: '16px', fontWeight: '500' }}>작품 업로드</span>
+                                <div style={{ width: '32px', height: '32px', backgroundColor: mainColor, borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: '24px', fontWeight: 'bold', paddingBottom: '4px' }}>+</div>
+                            </div>
+                            
+                            {/* 기존 대시보드 버튼 */}
+                            <button className="dashboard-check-btn" onClick={handleDashboardClick}>수익 대시보드 확인하기 &gt;</button>
+                        </div>
                     </div>
 
                     <div className="artwork-info-section">
