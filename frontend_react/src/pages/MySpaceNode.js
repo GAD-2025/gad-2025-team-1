@@ -30,7 +30,7 @@ const MySpaceNode = () => {
         setIsLoading(true);
         setError(null);
 
-        fetch(`http://localhost:5000/api/nodes/${artworkId}`)
+        fetch(`${process.env.REACT_APP_API_BASE_URL}/api/nodes/${artworkId}`)
             .then(res => {
                 if (!res.ok) throw new Error("서버 응답 실패");
                 return res.json();
@@ -99,7 +99,7 @@ const MySpaceNode = () => {
                 // 삭제 확인
                 if (window.confirm("선택한 노드를 삭제하시겠습니까?")) {
                     try {
-                        const res = await fetch(`http://localhost:5000/api/nodes/${selectedId}`, {
+                        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/nodes/${selectedId}`, {
                             method: 'DELETE'
                         });
                         const data = await res.json();
@@ -189,7 +189,7 @@ const MySpaceNode = () => {
         };
 
         try {
-            const res = await fetch('http://localhost:5000/api/nodes', {
+            const res = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/nodes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newMemoData)

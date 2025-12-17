@@ -33,7 +33,7 @@ const Cart = () => {
         // (서버가 다중 구매를 지원하지 않으므로 반복문 사용)
         for (const item of [...cartItems]) { // 배열 복사해서 순회
             try {
-                const response = await fetch('http://localhost:5000/api/purchase', {
+                const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/purchase', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

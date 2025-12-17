@@ -40,7 +40,7 @@ const ArchiveDetail = () => {
             setIsLoading(true);
             try {
                 // 1. 전체 작품 목록 가져오기
-                const response = await axios.get('http://localhost:5000/api/artworks');
+                const response = await axios.get(process.env.REACT_APP_API_BASE_URL + '/api/artworks');
                 
                 // [디버깅용] 브라우저 콘솔(F12)에서 실제 들어오는 데이터 형태를 확인하세요!
                 console.log("전체 작품 데이터:", response.data);
@@ -62,7 +62,7 @@ const ArchiveDetail = () => {
                         // 만약 이미지가 http로 시작하지 않고, 파일명만 있다면 서버 주소 붙이기 (필요시)
                         // (이미지 경로가 온전한 URL로 온다면 이 부분은 건너뛰어도 됩니다)
                         if (rawImageUrl && !rawImageUrl.startsWith('http') && !rawImageUrl.startsWith('data:')) {
-                            rawImageUrl = `http://localhost:5000${rawImageUrl.startsWith('/') ? '' : '/'}${rawImageUrl}`;
+                            rawImageUrl = `${process.env.REACT_APP_API_BASE_URL}${rawImageUrl.startsWith('/') ? '' : '/'}${rawImageUrl}`;
                         }
 
                         setArtworkInfo({

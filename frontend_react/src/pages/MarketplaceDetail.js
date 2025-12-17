@@ -31,7 +31,7 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
     const getImageUrl = (url) => {
         if (!url) return 'https://via.placeholder.com/300?text=No+Image';
         if (url.startsWith('/uploads/')) {
-            return `http://localhost:5000${url}`;
+            return `${process.env.REACT_APP_API_BASE_URL}${url}`;
         }
         return url;
     };
@@ -41,7 +41,7 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
 
         const fetchDetail = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/artworks');
+                const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/artworks');
                 
                 if (!response.ok) {
                     throw new Error('서버 연결 실패');
@@ -114,7 +114,7 @@ const MarketplaceDetail = ({ user: propUser, refreshInventory }) => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/purchase', {
+            const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

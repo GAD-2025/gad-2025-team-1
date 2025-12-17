@@ -39,7 +39,7 @@ const MySpace = () => {
         const storedUser = sessionStorage.getItem('currentUser');
         if (storedUser) {
             const user = JSON.parse(storedUser);
-            fetch(`http://localhost:5000/api/myspace/${user.username}`)
+            fetch(`${process.env.REACT_APP_API_BASE_URL}/api/myspace/${user.username}`)
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {

@@ -41,7 +41,7 @@ function App() {
       // 실제 데이터는 MySpace 등에서 로드하겠지만, 
       // 이 함수를 호출함으로써 관련 상태를 업데이트하거나 로그를 남길 수 있습니다.
       // 만약 App.js에서 전역으로 인벤토리를 관리한다면 여기서 setState를 합니다.
-      const response = await fetch(`http://localhost:5000/api/inventory/${user.username}`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/inventory/${user.username}`);
       const data = await response.json();
       if (data.success) {
         console.log("✅ 보관함 갱신 완료");

@@ -24,7 +24,7 @@ const MySpaceNode = () => {
         const artworkId = nodeData?.id ? nodeData.id : 1; 
 
         if (artworkId) {
-            fetch(`http://localhost:5000/api/nodes/${artworkId}`)
+            fetch(`${process.env.REACT_APP_API_BASE_URL}/api/nodes/${artworkId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -140,7 +140,7 @@ const MySpaceNode = () => {
         };
 
         try {
-            const res = await fetch('http://localhost:5000/api/nodes', {
+            const res = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/nodes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newMemoData)

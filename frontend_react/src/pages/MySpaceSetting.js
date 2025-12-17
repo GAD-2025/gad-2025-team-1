@@ -37,7 +37,7 @@ const MySpaceSetting = () => {
 
         // 3. [업로드 이미지 살리기] 그 외(백엔드 uploads 등)는 서버 주소 붙이기
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        return `http://localhost:5000${cleanPath}`;
+        return `${process.env.REACT_APP_API_BASE_URL}${cleanPath}`;
     };
 
     // 데이터 로드
@@ -51,7 +51,7 @@ const MySpaceSetting = () => {
         
         const user = JSON.parse(storedUser);
 
-        fetch(`http://localhost:5000/api/myspace/${user.username}`)
+        fetch(`${process.env.REACT_APP_API_BASE_URL}/api/myspace/${user.username}`)
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
@@ -175,7 +175,7 @@ const MySpaceSetting = () => {
 
     const saveAllData = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/myspace/save', {
+            const response = await fetch(process.env.REACT_APP_API_BASE_URL + '/api/myspace/save', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(myData)
