@@ -10,7 +10,7 @@ const app = express();
 // --- CORS 설정 시작 ---
 const allowedOrigins = [
   'http://localhost:3000',            // 로컬에서 개발할 때 (React 기본 포트)
-  'https://gad-2025-team1.web.app'    // 실제 배포된 사이트 주소
+  'https://gad-2025-team-1.web.app'    // 실제 배포된 사이트 주소
 ];
 
 app.use(cors({
